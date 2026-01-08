@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Battle City</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="localization.js"></script>
+</head>
+<body>
+    <div id="game-container">
+        <canvas id="gameCanvas"></canvas>
+        <button id="fullscreen-btn">F</button>
+        
+        <!-- Language Selector -->
+        <div id="language-selector">
+            <select id="language-select">
+                <option value="en">English</option>
+                <option value="ru">Русский</option>
+                <option value="tj">Тоҷикӣ</option>
+            </select>
+        </div>
+        
+        <!-- UI Overlay -->
+        <div id="ui-overlay">
+            <div id="menu-screen" class="screen">
+                <h1 data-i18n="gameTitle">BATTLE CITY</h1>
+                <p data-i18n="gameSubtitle">PROTECT THE BASE. DESTROY ENEMIES.</p>
+                <button id="start-button" data-i18n="startMission">START MISSION</button>
+                <div class="controls" data-i18n="controls">
+                    WASD / ARROWS - MOVE<br>
+                    SPACE - SHOOT
+                </div>
+            </div>
+
+            <div id="mode-select-screen" class="screen hidden">
+                <h1 data-i18n="selectMode">SELECT GAME MODE</h1>
+                <div class="mode-buttons">
+                    <button id="single-mode-btn" class="mode-btn">
+                        <h3 data-i18n="singlePlayer">SINGLE PLAYER</h3>
+                        <p data-i18n="singlePlayerDesc">Classic solo mission</p>
+                    </button>
+                    <button id="cooperative-mode-btn" class="mode-btn">
+                        <h3 data-i18n="cooperative">COOPERATIVE</h3>
+                        <p data-i18n="cooperativeDesc">Team up with a friend</p>
+                        <small data-i18n="cooperativeControls">Player 1: WASD + Space | Player 2: Arrows + Enter</small>
+                    </button>
+                    <button id="versus-mode-btn" class="mode-btn">
+                        <h3 data-i18n="versus">VERSUS</h3>
+                        <p data-i18n="versusDesc">Compete against a friend</p>
+                        <small data-i18n="versusControls">Player 1: WASD + Space | Player 2: Arrows + Enter</small>
+                    </button>
+                </div>
+                <button id="back-to-menu-btn" class="back-btn" data-i18n="backToMenu">BACK TO MENU</button>
+            </div>
+
+            <div id="game-over-screen" class="screen hidden">
+                <h1 id="game-over-title" data-i18n="missionFailed">MISSION FAILED</h1>
+                <p id="final-score">SCORE: 0</p>
+                <button id="restart-button" data-i18n="tryAgain">TRY AGAIN</button>
+            </div>
+
+            <!-- Multiplayer HUD -->
+            <div id="multiplayer-hud" class="multiplayer-hud hidden">
+                <div class="player1-info player-info">
+                    <div>P1</div>
+                    <div id="p1-lives">♥ 3</div>
+                    <div id="p1-score">★ 0</div>
+                </div>
+                <div class="shared-info hidden">
+                    <div id="shared-lives">♥ 6</div>
+                    <div id="shared-score">★ 0</div>
+                </div>
+                <div class="player2-info player-info">
+                    <div>P2</div>
+                    <div id="p2-lives">♥ 3</div>
+                    <div id="p2-score">★ 0</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Mobile Controls -->
+        <div id="mobile-controls">
+            <!-- Single Player Controls -->
+            <div id="single-player-controls" class="mobile-control-set">
+                <div class="d-pad">
+                    <button id="btn-up" class="control-btn">▲</button>
+                    <div class="d-pad-horizontal">
+                        <button id="btn-left" class="control-btn">◀</button>
+                        <button id="btn-right" class="control-btn">▶</button>
+                    </div>
+                    <button id="btn-down" class="control-btn">▼</button>
+                </div>
+                <button id="btn-shoot" class="control-btn">🔥</button>
+            </div>
+
+            <!-- Multiplayer Controls -->
+            <div id="multiplayer-controls" class="mobile-control-set hidden">
+                <!-- Player 1 Controls (Left Side) -->
+                <div class="player-controls player1-controls">
+                    <div class="player-label">P1</div>
+                    <div class="d-pad small">
+                        <button id="btn-p1-up" class="control-btn small">▲</button>
+                        <div class="d-pad-horizontal">
+                            <button id="btn-p1-left" class="control-btn small">◀</button>
+                            <button id="btn-p1-right" class="control-btn small">▶</button>
+                        </div>
+                        <button id="btn-p1-down" class="control-btn small">▼</button>
+                    </div>
+                    <button id="btn-p1-shoot" class="control-btn small">🔥</button>
+                </div>
+
+                <!-- Player 2 Controls (Right Side) -->
+                <div class="player-controls player2-controls">
+                    <div class="player-label">P2</div>
+                    <div class="d-pad small">
+                        <button id="btn-p2-up" class="control-btn small">▲</button>
+                        <div class="d-pad-horizontal">
+                            <button id="btn-p2-left" class="control-btn small">◀</button>
+                            <button id="btn-p2-right" class="control-btn small">▶</button>
+                        </div>
+                        <button id="btn-p2-down" class="control-btn small">▼</button>
+                    </div>
+                    <button id="btn-p2-shoot" class="control-btn small">🔥</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script src="game.js"></script>
+</body>
+</html>
