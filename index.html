@@ -60,6 +60,18 @@
                 <button id="restart-button" data-i18n="tryAgain">TRY AGAIN</button>
             </div>
 
+            <!-- Pause Screen -->
+            <div id="pause-screen" class="screen hidden">
+                <h1 data-i18n="gamePaused">GAME PAUSED</h1>
+                <div class="pause-controls">
+                    <button id="resume-button" data-i18n="resumeGame">RESUME GAME</button>
+                    <button id="pause-exit-button" data-i18n="exitToMenu">EXIT TO MENU</button>
+                </div>
+                <div class="pause-help">
+                    <p data-i18n="pauseHelp">Press BACKSPACE to resume or ESC to exit</p>
+                </div>
+            </div>
+
             <!-- Multiplayer HUD -->
             <div id="multiplayer-hud" class="multiplayer-hud hidden">
                 <div class="player1-info player-info">
@@ -81,6 +93,12 @@
 
         <!-- Mobile Controls -->
         <div id="mobile-controls">
+            <!-- Game Control Buttons (ESC/Pause) -->
+            <div id="mobile-game-controls" class="mobile-game-controls hidden">
+                <button id="mobile-pause-btn" class="game-control-btn">⏸️</button>
+                <button id="mobile-exit-btn" class="game-control-btn">🚪</button>
+            </div>
+
             <!-- Single Player Controls -->
             <div id="single-player-controls" class="mobile-control-set">
                 <div class="d-pad">

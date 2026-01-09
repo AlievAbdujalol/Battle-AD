@@ -83,6 +83,10 @@ class MobileControls {
         controlsContainer.id = 'mobile-controls-enhanced';
         controlsContainer.className = 'mobile-controls-enhanced';
         
+        // Create game control buttons
+        const gameControlsDiv = this.createGameControls();
+        controlsContainer.appendChild(gameControlsDiv);
+        
         // Create player zones
         const player1Zone = this.createPlayerZone('player1', 'P1', 'bottom');
         const player2Zone = this.createPlayerZone('player2', 'P2', 'top');
@@ -96,6 +100,30 @@ class MobileControls {
         
         // Add CSS styles
         this.addStyles();
+    }
+    
+    createGameControls() {
+        const gameControls = document.createElement('div');
+        gameControls.className = 'mobile-game-controls-enhanced';
+        
+        // Pause button
+        const pauseBtn = document.createElement('div');
+        pauseBtn.className = 'game-control-btn-enhanced';
+        pauseBtn.id = 'mobile-pause-enhanced';
+        pauseBtn.innerHTML = '⏸️';
+        pauseBtn.title = 'Pause (Backspace)';
+        
+        // Exit button
+        const exitBtn = document.createElement('div');
+        exitBtn.className = 'game-control-btn-enhanced';
+        exitBtn.id = 'mobile-exit-enhanced';
+        exitBtn.innerHTML = '🚪';
+        exitBtn.title = 'Exit (ESC)';
+        
+        gameControls.appendChild(pauseBtn);
+        gameControls.appendChild(exitBtn);
+        
+        return gameControls;
     }
     
     createPlayerZone(playerId, label, position) {
@@ -151,6 +179,42 @@ class MobileControls {
                 z-index: 25;
                 display: flex;
                 flex-direction: column;
+            }
+            
+            .mobile-game-controls-enhanced {
+                position: absolute;
+                top: 20px;
+                right: 20px;
+                display: flex;
+                flex-direction: column;
+                gap: 10px;
+                z-index: 30;
+                pointer-events: auto;
+            }
+            
+            .game-control-btn-enhanced {
+                width: 50px;
+                height: 50px;
+                border: 2px solid rgba(255, 255, 255, 0.3);
+                border-radius: 50%;
+                background: rgba(0, 0, 0, 0.7);
+                color: white;
+                font-size: 20px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                touch-action: none;
+                user-select: none;
+                -webkit-user-select: none;
+                -webkit-tap-highlight-color: transparent;
+                transition: all 0.2s ease;
+                cursor: pointer;
+            }
+            
+            .game-control-btn-enhanced:active {
+                background: rgba(255, 255, 255, 0.2);
+                border-color: rgba(255, 255, 255, 0.6);
+                transform: scale(0.95);
             }
             
             .player-zone {
@@ -348,6 +412,36 @@ class MobileControls {
         controlsContainer.addEventListener('touchmove', this.handleTouchMove.bind(this), { passive: false });
         controlsContainer.addEventListener('touchend', this.handleTouchEnd.bind(this), { passive: false });
         controlsContainer.addEventListener('touchcancel', this.handleTouchEnd.bind(this), { passive: false });
+        
+        // Game control buttons
+        const pauseBtn = document.getElementById('mobile-pause-enhanced');
+        const exitBtn = document.getElementById('mobile-exit-enhanced');
+        
+        if (pauseBtn) {
+            pauseBtn.addEventListener('touchstart', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                if (window.handlePauseKey) window.handlePauseKey();
+            });
+            pauseBtn.addEventListener('click', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                if (window.handlePauseKey) window.handlePauseKey();
+            });
+        }
+        
+        if (exitBtn) {
+            exitBtn.addEventListener('touchstart', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                if (window.handleEscapeKey) window.handleEscapeKey();
+            });
+            exitBtn.addEventListener('click', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                if (window.handleEscapeKey) window.handleEscapeKey();
+            });
+        }
         
         // Prevent context menu on long press
         controlsContainer.addEventListener('contextmenu', (e) => e.preventDefault());

@@ -31,6 +31,12 @@ const translations = {
         drawGame: "DRAW GAME!",
         tryAgain: "TRY AGAIN",
         
+        // Pause
+        gamePaused: "GAME PAUSED",
+        resumeGame: "RESUME GAME",
+        exitToMenu: "EXIT TO MENU",
+        pauseHelp: "Press BACKSPACE to resume or ESC to exit",
+        
         // HUD
         lives: "LIVES",
         score: "SCORE",
@@ -70,6 +76,12 @@ const translations = {
         drawGame: "НИЧЬЯ!",
         tryAgain: "ПОПРОБОВАТЬ СНОВА",
         
+        // Pause
+        gamePaused: "ИГРА НА ПАУЗЕ",
+        resumeGame: "ПРОДОЛЖИТЬ ИГРУ",
+        exitToMenu: "ВЫЙТИ В МЕНЮ",
+        pauseHelp: "Нажмите BACKSPACE для продолжения или ESC для выхода",
+        
         // HUD
         lives: "ЖИЗНИ",
         score: "СЧЕТ",
@@ -108,6 +120,12 @@ const translations = {
         playerWins: "БОЗИНГАР {0} ҒОЛИБ!",
         drawGame: "МУСОВӢ!",
         tryAgain: "БОЗ КӮШИШ КУНЕД",
+        
+        // Pause
+        gamePaused: "БОЗӢ ТАВАҚҚУФ ШУД",
+        resumeGame: "ИДОМА ДОДАН",
+        exitToMenu: "БАРОМАД БА МЕНЮ",
+        pauseHelp: "BACKSPACE-ро барои идома ё ESC-ро барои баромад пахш кунед",
         
         // HUD
         lives: "ҲАЁТ",

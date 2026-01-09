@@ -394,7 +394,72 @@ body:has(.mobile-controls-enhanced) #mobile-controls {
     border: 2px solid #ffd700;
 }
 
-/* Responsive adjustments for smaller screens */
+/* --- Pause Screen Styles --- */
+.pause-controls {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    margin: 20px 0;
+}
+
+.pause-controls button {
+    padding: 12px 25px;
+    font-size: 18px;
+}
+
+.pause-help {
+    margin-top: 20px;
+    font-size: 14px;
+    color: #aaa;
+    font-style: italic;
+}
+
+/* --- Mobile Game Control Buttons --- */
+.mobile-game-controls {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    z-index: 30;
+    pointer-events: auto;
+}
+
+.game-control-btn {
+    width: 50px;
+    height: 50px;
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    border-radius: 50%;
+    background: rgba(0, 0, 0, 0.7);
+    color: white;
+    font-size: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
+    transition: all 0.2s ease;
+    cursor: pointer;
+}
+
+.game-control-btn:active {
+    background: rgba(255, 255, 255, 0.2);
+    border-color: rgba(255, 255, 255, 0.6);
+    transform: scale(0.95);
+}
+
+.game-control-btn:hover {
+    background: rgba(255, 255, 255, 0.1);
+    border-color: rgba(255, 255, 255, 0.5);
+}
+
+/* Hide game control buttons on desktop */
+@media (hover: hover) and (pointer: fine) {
+    .mobile-game-controls { 
+        display: none; 
+    }
+}
 @media (max-width: 768px) {
     .mode-btn {
         min-width: 300px;

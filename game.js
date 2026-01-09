@@ -22,6 +22,7 @@ const GameState = {
     PLAYING: 'PLAYING',
     COOPERATIVE: 'COOPERATIVE',
     VERSUS: 'VERSUS',
+    PAUSED: 'PAUSED',
     GAME_OVER: 'GAME_OVER'
 };
 
@@ -915,11 +916,117 @@ let players = [];
 let multiplayerSession = null;
 let keys = {};
 let lastTime = 0;
+let isPaused = false;
+let pauseStartTime = 0;
 
-window.addEventListener('keydown', e => keys[e.code] = true);
+window.addEventListener('keydown', e => {
+    keys[e.code] = true;
+    
+    // Обработка ESC - выход из игры
+    if (e.code === 'Escape') {
+        e.preventDefault();
+        handleEscapeKey();
+    }
+    
+    // Обработка Backspace - пауза
+    if (e.code === 'Backspace') {
+        e.preventDefault();
+        handlePauseKey();
+    }
+});
 window.addEventListener('keyup', e => keys[e.code] = false);
 
-// Мобильное управление
+function handleEscapeKey() {
+    // Выход из игры в зависимости от текущего состояния
+    if (currentGameState === GameState.PLAYING || 
+        currentGameState === GameState.COOPERATIVE || 
+        currentGameState === GameState.VERSUS ||
+        currentGameState === GameState.PAUSED) {
+        
+        // Возвращаемся в меню выбора режима для мультиплеера или главное меню для одиночной игры
+        if (currentGameMode === GameMode.SINGLE) {
+            returnToMainMenu();
+        } else {
+            returnToModeSelect();
+        }
+    } else if (currentGameState === GameState.MODE_SELECT) {
+        // Из выбора режима возвращаемся в главное меню
+        returnToMainMenu();
+    } else if (currentGameState === GameState.GAME_OVER) {
+        // Из Game Over возвращаемся в главное меню
+        returnToMainMenu();
+    }
+}
+
+function handlePauseKey() {
+    // Пауза работает только во время игры
+    if (currentGameState === GameState.PLAYING || 
+        currentGameState === GameState.COOPERATIVE || 
+        currentGameState === GameState.VERSUS) {
+        togglePause();
+    } else if (currentGameState === GameState.PAUSED) {
+        togglePause();
+    }
+}
+
+// Делаем функции глобально доступными
+window.handleEscapeKey = handleEscapeKey;
+window.handlePauseKey = handlePauseKey;
+
+function togglePause() {
+    if (isPaused) {
+        // Снимаем паузу
+        isPaused = false;
+        pauseStartTime = 0;
+        document.getElementById('pause-screen').classList.add('hidden');
+        
+        // Возобновляем аудио контекст если нужно
+        if (sounds.ctx.state === 'suspended') {
+            sounds.ctx.resume();
+        }
+    } else {
+        // Ставим на паузу
+        isPaused = true;
+        pauseStartTime = Date.now();
+        document.getElementById('pause-screen').classList.remove('hidden');
+    }
+}
+
+function returnToMainMenu() {
+    // Очищаем игровое состояние
+    isPaused = false;
+    currentGameState = GameState.MENU;
+    
+    // Скрываем все экраны
+    document.getElementById('mode-select-screen').classList.add('hidden');
+    document.getElementById('game-over-screen').classList.add('hidden');
+    document.getElementById('pause-screen').classList.add('hidden');
+    document.getElementById('multiplayer-hud').classList.add('hidden');
+    
+    // Показываем главное меню
+    document.getElementById('menu-screen').classList.remove('hidden');
+    
+    // Обновляем мобильные контролы
+    updateMobileControls();
+}
+
+function returnToModeSelect() {
+    // Очищаем игровое состояние
+    isPaused = false;
+    currentGameState = GameState.MODE_SELECT;
+    
+    // Скрываем все экраны кроме выбора режима
+    document.getElementById('menu-screen').classList.add('hidden');
+    document.getElementById('game-over-screen').classList.add('hidden');
+    document.getElementById('pause-screen').classList.add('hidden');
+    document.getElementById('multiplayer-hud').classList.add('hidden');
+    
+    // Показываем экран выбора режима
+    document.getElementById('mode-select-screen').classList.remove('hidden');
+    
+    // Обновляем мобильные контролы
+    updateMobileControls();
+}
 const mobileBtns = { 'btn-up': 'ArrowUp', 'btn-down': 'ArrowDown', 'btn-left': 'ArrowLeft', 'btn-right': 'ArrowRight', 'btn-shoot': 'Space' };
 
 // Мобильные контролы для мультиплеера
@@ -972,6 +1079,7 @@ document.addEventListener('DOMContentLoaded', function() {
 function updateMobileControls() {
     const singleControls = document.getElementById('single-player-controls');
     const multiControls = document.getElementById('multiplayer-controls');
+    const gameControls = document.getElementById('mobile-game-controls');
     
     if (currentGameMode === GameMode.SINGLE) {
         if (singleControls) singleControls.classList.remove('hidden');
@@ -989,6 +1097,18 @@ function updateMobileControls() {
         if (window.mobileControls) {
             window.mobileControls.setEnabled(true);
             window.mobileControls.setGameMode(currentGameMode);
+        }
+    }
+    
+    // Показываем кнопки управления игрой только во время игры
+    if (gameControls) {
+        if (currentGameState === GameState.PLAYING || 
+            currentGameState === GameState.COOPERATIVE || 
+            currentGameState === GameState.VERSUS ||
+            currentGameState === GameState.PAUSED) {
+            gameControls.classList.remove('hidden');
+        } else {
+            gameControls.classList.add('hidden');
         }
     }
 }
@@ -1032,6 +1152,24 @@ document.addEventListener('DOMContentLoaded', function() {
             document.getElementById('game-over-screen').classList.add('hidden');
             document.getElementById('mode-select-screen').classList.remove('hidden');
         }
+    });
+
+    // Обработчики для экрана паузы
+    document.getElementById('resume-button').addEventListener('click', () => {
+        togglePause();
+    });
+
+    document.getElementById('pause-exit-button').addEventListener('click', () => {
+        handleEscapeKey();
+    });
+
+    // Мобильные кнопки управления игрой
+    document.getElementById('mobile-pause-btn').addEventListener('click', () => {
+        handlePauseKey();
+    });
+
+    document.getElementById('mobile-exit-btn').addEventListener('click', () => {
+        handleEscapeKey();
     });
 
     const fullscreenBtn = document.getElementById('fullscreen-btn');
@@ -1097,6 +1235,7 @@ function startGame(gameMode = GameMode.SINGLE) {
     document.getElementById('menu-screen').classList.add('hidden');
     document.getElementById('mode-select-screen').classList.add('hidden');
     document.getElementById('game-over-screen').classList.add('hidden');
+    document.getElementById('pause-screen').classList.add('hidden');
     if (sounds.ctx.state === 'suspended') sounds.ctx.resume();
 }
 
@@ -1130,6 +1269,9 @@ function gameOver() {
 
 function update(dt) {
     if (currentGameState === GameState.MENU || currentGameState === GameState.MODE_SELECT || currentGameState === GameState.GAME_OVER) return;
+    
+    // Если игра на паузе, не обновляем игровую логику
+    if (isPaused || currentGameState === GameState.PAUSED) return;
     
     // Обновляем игроков
     if (currentGameMode === GameMode.SINGLE) {
