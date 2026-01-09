@@ -501,6 +501,11 @@ button:active {
     z-index: 100;
 }
 
+/* Скрываем селектор языка во время игры */
+body.game-active #language-selector {
+    display: none;
+}
+
 #language-select {
     background: rgba(0, 0, 0, 0.8);
     color: #fff;

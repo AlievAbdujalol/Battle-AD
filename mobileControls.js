@@ -569,9 +569,11 @@ class MobileControls {
         const rect = document.getElementById('mobile-controls-enhanced').getBoundingClientRect();
         const relativeY = (touch.clientY - rect.top) / rect.height;
         
-        if (relativeY >= this.touchZones.player1.top && relativeY <= this.touchZones.player1.bottom) {
+        // Player 1: нижняя половина (0.5 - 1.0)
+        // Player 2: верхняя половина (0.0 - 0.5)
+        if (relativeY >= 0.5) {
             return 'player1';
-        } else if (relativeY >= this.touchZones.player2.top && relativeY <= this.touchZones.player2.bottom) {
+        } else if (relativeY < 0.5) {
             return 'player2';
         }
         

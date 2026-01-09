@@ -106,12 +106,14 @@ const sounds = new SoundManager();
 // --- Multiplayer Session Management ---
 class MultiplayerSession {
     constructor(mode) {
+        console.log(`Creating MultiplayerSession with mode: ${mode}`);
         this.mode = mode;
         this.players = [];
         this.sharedLives = mode === GameMode.COOPERATIVE ? 6 : null;
         this.sharedScore = mode === GameMode.COOPERATIVE ? 0 : null;
         this.winner = null;
         this.startTime = Date.now();
+        console.log(`MultiplayerSession created - sharedScore: ${this.sharedScore}, sharedLives: ${this.sharedLives}`);
     }
 
     addPlayer(playerId, controlScheme, color) {
@@ -125,12 +127,19 @@ class MultiplayerSession {
     }
 
     addScore(points, playerId = null) {
+        console.log(`addScore called with points: ${points}, playerId: ${playerId}, mode: ${this.mode}`);
         if (this.mode === GameMode.COOPERATIVE) {
+            console.log(`Before: sharedScore = ${this.sharedScore}`);
             this.sharedScore += points;
+            console.log(`After: sharedScore = ${this.sharedScore}`);
         } else if (playerId !== null) {
             const player = this.players.find(p => p.playerId === playerId);
             if (player) {
+                console.log(`Before: player ${playerId} individualScore = ${player.individualScore}`);
                 player.individualScore += points;
+                console.log(`After: player ${playerId} individualScore = ${player.individualScore}`);
+            } else {
+                console.log(`Player with ID ${playerId} not found in session`);
             }
         }
     }
@@ -679,10 +688,21 @@ class MultiplayerPlayer extends Player {
         }
     }
 
-    drawTank(ctx) {
+    draw(ctx) {
         // Рисуем танк с цветом игрока
         const barrelColor = this.color === '#4CAF50' ? '#2E7D32' : '#1565C0';
         super.drawTank(ctx, this.color, barrelColor);
+        
+        // Рисуем щит если активен
+        if (this.shieldTimer > 0) {
+            ctx.beginPath();
+            ctx.arc(this.x + this.width / 2, this.y + this.height / 2, this.width * 0.8, 0, Math.PI * 2);
+            ctx.strokeStyle = 'cyan';
+            ctx.lineWidth = 2;
+            ctx.setLineDash([5, 5]);
+            ctx.stroke();
+            ctx.setLineDash([]);
+        }
     }
 }
 
@@ -933,6 +953,30 @@ window.addEventListener('keydown', e => {
         e.preventDefault();
         handlePauseKey();
     }
+    
+    // Обработка F - полноэкранный режим (только если не в игре или игра на паузе)
+    if (e.code === 'KeyF') {
+        // Разрешаем F только в меню или на паузе
+        if (currentGameState === GameState.MENU || 
+            currentGameState === GameState.MODE_SELECT || 
+            currentGameState === GameState.GAME_OVER ||
+            currentGameState === GameState.PAUSED) {
+            e.preventDefault();
+            if (!document.fullscreenElement) {
+                document.getElementById('game-container').requestFullscreen();
+            } else {
+                document.exitFullscreen();
+            }
+        }
+    }
+    
+    // Блокируем стрелки во время игры, чтобы они не влияли на селектор языка
+    if ((e.code === 'ArrowUp' || e.code === 'ArrowDown' || e.code === 'ArrowLeft' || e.code === 'ArrowRight') &&
+        (currentGameState === GameState.PLAYING || 
+         currentGameState === GameState.COOPERATIVE || 
+         currentGameState === GameState.VERSUS)) {
+        e.preventDefault();
+    }
 });
 window.addEventListener('keyup', e => keys[e.code] = false);
 
@@ -1000,6 +1044,9 @@ function returnToMainMenu() {
     isPaused = false;
     currentGameState = GameState.MENU;
     
+    // Убираем класс game-active
+    document.body.classList.remove('game-active');
+    
     // Скрываем все экраны
     document.getElementById('mode-select-screen').classList.add('hidden');
     document.getElementById('game-over-screen').classList.add('hidden');
@@ -1017,6 +1064,9 @@ function returnToModeSelect() {
     // Очищаем игровое состояние
     isPaused = false;
     currentGameState = GameState.MODE_SELECT;
+    
+    // Убираем класс game-active
+    document.body.classList.remove('game-active');
     
     // Скрываем все экраны кроме выбора режима
     document.getElementById('menu-screen').classList.add('hidden');
@@ -1132,6 +1182,25 @@ document.addEventListener('DOMContentLoaded', function() {
         i18n.setLanguage(e.target.value);
         updateGameTexts();
     });
+    
+    // Блокируем фокус на селекторе языка во время игры
+    document.getElementById('language-select').addEventListener('focus', function(e) {
+        if (currentGameState === GameState.PLAYING || 
+            currentGameState === GameState.COOPERATIVE || 
+            currentGameState === GameState.VERSUS) {
+            e.target.blur(); // Убираем фокус
+        }
+    });
+    
+    // Блокируем клавиши стрелок на селекторе языка во время игры
+    document.getElementById('language-select').addEventListener('keydown', function(e) {
+        if (currentGameState === GameState.PLAYING || 
+            currentGameState === GameState.COOPERATIVE || 
+            currentGameState === GameState.VERSUS) {
+            e.preventDefault();
+            e.stopPropagation();
+        }
+    });
 
     document.getElementById('start-button').addEventListener('click', () => {
         currentGameState = GameState.MODE_SELECT;
@@ -1183,17 +1252,6 @@ document.addEventListener('DOMContentLoaded', function() {
         else document.exitFullscreen();
     };
 
-    // Добавляем поддержку клавиши F для полноэкранного режима
-    document.addEventListener('keydown', (e) => {
-        if (e.code === 'KeyF') {
-            e.preventDefault();
-            if (!document.fullscreenElement) {
-                document.getElementById('game-container').requestFullscreen();
-            } else {
-                document.exitFullscreen();
-            }
-        }
-    });
 });
 
 function resizeCanvas() {
@@ -1209,6 +1267,9 @@ resizeCanvas();
 
 function startGame(gameMode = GameMode.SINGLE) {
     currentGameMode = gameMode;
+    
+    // Добавляем класс для скрытия селектора языка
+    document.body.classList.add('game-active');
     
     // Порядок критичен: сначала карта и база, потом игрок (для respawn)
     map = new GameMap();
@@ -1246,6 +1307,10 @@ function startGame(gameMode = GameMode.SINGLE) {
 
 function gameOver() {
     currentGameState = GameState.GAME_OVER;
+    
+    // Убираем класс game-active
+    document.body.classList.remove('game-active');
+    
     document.getElementById('game-over-screen').classList.remove('hidden');
     
     // Обновляем заголовок
@@ -1311,17 +1376,26 @@ function update(dt) {
                         
                         // Начисляем очки в зависимости от режима игры
                         if (multiplayerSession) {
+                            console.log(`Multiplayer session found, mode: ${multiplayerSession.mode}`);
                             if (multiplayerSession.mode === GameMode.COOPERATIVE) {
+                                console.log(`Adding 100 points to cooperative score. Current: ${multiplayerSession.sharedScore}`);
                                 multiplayerSession.addScore(100);
+                                console.log(`New cooperative score: ${multiplayerSession.sharedScore}`);
                             } else if (multiplayerSession.mode === GameMode.VERSUS) {
                                 // Найдем игрока, который выстрелил (по ID пули)
                                 const shooterPlayer = players.find(p => p.playerId === b.shooterId);
                                 if (shooterPlayer) {
+                                    console.log(`Adding 100 points to player ${shooterPlayer.playerId}`);
                                     multiplayerSession.addScore(100, shooterPlayer.playerId);
+                                } else {
+                                    console.log(`Shooter player not found for bullet with shooterId: ${b.shooterId}`);
                                 }
                             }
                         } else if (player) {
+                            console.log(`Single player mode, adding 100 points`);
                             player.score += 100;
+                        } else {
+                            console.log(`No player or multiplayer session found!`);
                         }
                         
                         // Генерируем power-up
@@ -1527,7 +1601,9 @@ function drawHUD() {
         ctx.fillText(`🌊 ${i18n.get('wave')}: ${waveManager.wave}`, canvas.width - 180, 26);
         ctx.fillText(`💀 ${i18n.get('enemies')}: ${enemies.length + waveManager.toSpawn}`, canvas.width - 20, 26);
     } else if (multiplayerSession) {
+        console.log(`Drawing HUD for multiplayer, mode: ${multiplayerSession.mode}`);
         if (multiplayerSession.mode === GameMode.COOPERATIVE) {
+            console.log(`Cooperative mode - sharedScore: ${multiplayerSession.sharedScore}, sharedLives: ${multiplayerSession.sharedLives}`);
             // Кооперативный режим - общие жизни и счет
             ctx.textAlign = 'left';
             ctx.fillText(`🛡️ ${i18n.get('lives')}: ${multiplayerSession.sharedLives}`, 20, 26);
@@ -1569,6 +1645,9 @@ function updateGameOverTitle() {
 
 // Функция для обновления всех игровых текстов при смене языка
 function updateGameTexts() {
+    // Обновляем все элементы с data-i18n атрибутами
+    i18n.updateUI();
+    
     // Обновляем HUD если игра активна
     if (currentGameState !== GameState.MENU && currentGameState !== GameState.MODE_SELECT) {
         // HUD обновится автоматически при следующем кадре
