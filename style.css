@@ -146,14 +146,13 @@ button:active {
     z-index: 20;
 }
 
-/* Hide original mobile controls when enhanced controls are active */
-body:has(.mobile-controls-enhanced) #mobile-controls {
-    display: none !important;
+/* Показываем оригинальные мобильные контролы по умолчанию */
+#mobile-controls {
+    display: flex;
 }
 
-/* Fallback for browsers that don't support :has() */
-.mobile-controls-enhanced + #mobile-controls,
-.mobile-controls-enhanced ~ #mobile-controls {
+/* Скрываем оригинальные мобильные контролы когда активны улучшенные */
+.mobile-controls-enhanced:not([style*="display: none"]) ~ #mobile-controls {
     display: none !important;
 }
 
@@ -455,11 +454,7 @@ body:has(.mobile-controls-enhanced) #mobile-controls {
 }
 
 /* Hide game control buttons on desktop */
-@media (hover: hover) and (pointer: fine) {
-    .mobile-game-controls { 
-        display: none; 
-    }
-}
+/* Removed - buttons should be visible on all devices */
 @media (max-width: 768px) {
     .mode-btn {
         min-width: 300px;

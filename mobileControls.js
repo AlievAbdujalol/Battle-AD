@@ -68,15 +68,16 @@ class MobileControls {
         console.log('Initializing enhanced mobile controls');
         this.createControlElements();
         this.setupEventListeners();
-        this.updateVisibility();
+        
+        // Изначально скрываем улучшенные контролы
+        this.setEnabled(false);
     }
     
     createControlElements() {
-        // Remove existing mobile controls
-        const existingControls = document.getElementById('mobile-controls');
-        if (existingControls) {
-            existingControls.remove();
-        }
+        // Create enhanced mobile controls only for mobile devices
+        if (!this.isEnabled) return;
+        
+        // НЕ удаляем существующие мобильные контролы - они нужны для одиночной игры
         
         // Create new mobile controls container
         const controlsContainer = document.createElement('div');
@@ -102,28 +103,72 @@ class MobileControls {
         this.addStyles();
     }
     
-    createGameControls() {
-        const gameControls = document.createElement('div');
-        gameControls.className = 'mobile-game-controls-enhanced';
+    createGameControlButtons() {
+        // Remove existing game control buttons
+        const existingGameControls = document.getElementById('universal-game-controls');
+        if (existingGameControls) {
+            existingGameControls.remove();
+        }
+        
+        // Create universal game control buttons (visible on all devices)
+        const gameControlsDiv = document.createElement('div');
+        gameControlsDiv.id = 'universal-game-controls';
+        gameControlsDiv.className = 'universal-game-controls';
         
         // Pause button
         const pauseBtn = document.createElement('div');
-        pauseBtn.className = 'game-control-btn-enhanced';
-        pauseBtn.id = 'mobile-pause-enhanced';
+        pauseBtn.className = 'universal-control-btn';
+        pauseBtn.id = 'universal-pause-btn';
         pauseBtn.innerHTML = '⏸️';
         pauseBtn.title = 'Pause (Backspace)';
         
         // Exit button
         const exitBtn = document.createElement('div');
-        exitBtn.className = 'game-control-btn-enhanced';
-        exitBtn.id = 'mobile-exit-enhanced';
+        exitBtn.className = 'universal-control-btn';
+        exitBtn.id = 'universal-exit-btn';
         exitBtn.innerHTML = '🚪';
         exitBtn.title = 'Exit (ESC)';
         
-        gameControls.appendChild(pauseBtn);
-        gameControls.appendChild(exitBtn);
+        gameControlsDiv.appendChild(pauseBtn);
+        gameControlsDiv.appendChild(exitBtn);
         
-        return gameControls;
+        // Add to game container
+        const gameContainer = document.getElementById('game-container');
+        gameContainer.appendChild(gameControlsDiv);
+        
+        // Add event listeners
+        this.setupGameControlListeners();
+    }
+    
+    setupGameControlListeners() {
+        const pauseBtn = document.getElementById('universal-pause-btn');
+        const exitBtn = document.getElementById('universal-exit-btn');
+        
+        if (pauseBtn) {
+            pauseBtn.addEventListener('touchstart', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                if (window.handlePauseKey) window.handlePauseKey();
+            });
+            pauseBtn.addEventListener('click', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                if (window.handlePauseKey) window.handlePauseKey();
+            });
+        }
+        
+        if (exitBtn) {
+            exitBtn.addEventListener('touchstart', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                if (window.handleEscapeKey) window.handleEscapeKey();
+            });
+            exitBtn.addEventListener('click', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                if (window.handleEscapeKey) window.handleEscapeKey();
+            });
+        }
     }
     
     createPlayerZone(playerId, label, position) {
@@ -179,6 +224,49 @@ class MobileControls {
                 z-index: 25;
                 display: flex;
                 flex-direction: column;
+            }
+            
+            .universal-game-controls {
+                position: absolute;
+                top: 20px;
+                right: 20px;
+                display: flex;
+                flex-direction: column;
+                gap: 10px;
+                z-index: 35;
+                pointer-events: auto;
+            }
+            
+            .universal-control-btn {
+                width: 50px;
+                height: 50px;
+                border: 2px solid rgba(255, 255, 255, 0.4);
+                border-radius: 50%;
+                background: rgba(0, 0, 0, 0.8);
+                color: white;
+                font-size: 20px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                touch-action: none;
+                user-select: none;
+                -webkit-user-select: none;
+                -webkit-tap-highlight-color: transparent;
+                transition: all 0.2s ease;
+                cursor: pointer;
+                box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+            }
+            
+            .universal-control-btn:hover {
+                background: rgba(255, 255, 255, 0.1);
+                border-color: rgba(255, 255, 255, 0.6);
+                transform: scale(1.05);
+            }
+            
+            .universal-control-btn:active {
+                background: rgba(255, 255, 255, 0.2);
+                border-color: rgba(255, 255, 255, 0.8);
+                transform: scale(0.95);
             }
             
             .mobile-game-controls-enhanced {
@@ -403,45 +491,17 @@ class MobileControls {
     }
     
     setupEventListeners() {
+        // Setup enhanced mobile controls only for mobile devices
         if (!this.isEnabled) return;
         
         const controlsContainer = document.getElementById('mobile-controls-enhanced');
+        if (!controlsContainer) return;
         
         // Touch events on the entire controls container
         controlsContainer.addEventListener('touchstart', this.handleTouchStart.bind(this), { passive: false });
         controlsContainer.addEventListener('touchmove', this.handleTouchMove.bind(this), { passive: false });
         controlsContainer.addEventListener('touchend', this.handleTouchEnd.bind(this), { passive: false });
         controlsContainer.addEventListener('touchcancel', this.handleTouchEnd.bind(this), { passive: false });
-        
-        // Game control buttons
-        const pauseBtn = document.getElementById('mobile-pause-enhanced');
-        const exitBtn = document.getElementById('mobile-exit-enhanced');
-        
-        if (pauseBtn) {
-            pauseBtn.addEventListener('touchstart', (e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                if (window.handlePauseKey) window.handlePauseKey();
-            });
-            pauseBtn.addEventListener('click', (e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                if (window.handlePauseKey) window.handlePauseKey();
-            });
-        }
-        
-        if (exitBtn) {
-            exitBtn.addEventListener('touchstart', (e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                if (window.handleEscapeKey) window.handleEscapeKey();
-            });
-            exitBtn.addEventListener('click', (e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                if (window.handleEscapeKey) window.handleEscapeKey();
-            });
-        }
         
         // Prevent context menu on long press
         controlsContainer.addEventListener('contextmenu', (e) => e.preventDefault());
@@ -680,17 +740,38 @@ class MobileControls {
     }
     
     updateVisibility() {
+        // Update enhanced mobile controls visibility (only for mobile devices)
         const controlsContainer = document.getElementById('mobile-controls-enhanced');
-        if (!controlsContainer) return;
+        if (controlsContainer) {
+            const GameMode = window.GameMode || { COOPERATIVE: 'COOPERATIVE', VERSUS: 'VERSUS' };
+            const currentMode = this.currentGameMode || window.currentGameMode;
+            
+            if (this.isEnabled && (currentMode === GameMode.COOPERATIVE || currentMode === GameMode.VERSUS)) {
+                controlsContainer.style.display = 'flex';
+            } else {
+                controlsContainer.style.display = 'none';
+            }
+        }
         
-        // Show only in cooperative or versus modes and when mobile device is detected
-        const GameMode = window.GameMode || { COOPERATIVE: 'COOPERATIVE', VERSUS: 'VERSUS' };
-        const currentMode = this.currentGameMode || window.currentGameMode;
+        // Update universal game control buttons visibility (for all devices)
+        this.updateGameControlsVisibility();
+    }
+    
+    updateGameControlsVisibility() {
+        const gameControls = document.getElementById('universal-game-controls');
+        if (!gameControls) return;
         
-        if (this.isEnabled && (currentMode === GameMode.COOPERATIVE || currentMode === GameMode.VERSUS)) {
-            controlsContainer.style.display = 'flex';
+        // Show game control buttons during gameplay on all devices
+        const GameState = window.GameState || { PLAYING: 'PLAYING', COOPERATIVE: 'COOPERATIVE', VERSUS: 'VERSUS', PAUSED: 'PAUSED' };
+        const currentState = window.currentGameState;
+        
+        if (currentState === GameState.PLAYING || 
+            currentState === GameState.COOPERATIVE || 
+            currentState === GameState.VERSUS ||
+            currentState === GameState.PAUSED) {
+            gameControls.style.display = 'flex';
         } else {
-            controlsContainer.style.display = 'none';
+            gameControls.style.display = 'none';
         }
     }
     
@@ -700,18 +781,30 @@ class MobileControls {
         this.currentGameMode = gameMode;
         this.updateVisibility();
         
-        // Enable/disable based on game mode
+        // Enable/disable enhanced mobile controls based on game mode
         const GameMode = window.GameMode || { SINGLE: 'SINGLE', COOPERATIVE: 'COOPERATIVE', VERSUS: 'VERSUS' };
         const shouldEnable = (gameMode === GameMode.COOPERATIVE || gameMode === GameMode.VERSUS);
         this.setEnabled(shouldEnable);
+    }
+    
+    // Public method to update game controls visibility when game state changes
+    setGameState(gameState) {
+        this.updateGameControlsVisibility();
     }
     
     // Public method to enable/disable controls
     setEnabled(enabled) {
         const controlsContainer = document.getElementById('mobile-controls-enhanced');
         if (controlsContainer) {
-            controlsContainer.style.pointerEvents = enabled ? 'auto' : 'none';
-            controlsContainer.style.opacity = enabled ? '1' : '0.5';
+            if (enabled) {
+                controlsContainer.style.display = 'flex';
+                controlsContainer.style.pointerEvents = 'auto';
+                controlsContainer.style.opacity = '1';
+            } else {
+                controlsContainer.style.display = 'none';
+                controlsContainer.style.pointerEvents = 'none';
+                controlsContainer.style.opacity = '0';
+            }
         }
     }
     

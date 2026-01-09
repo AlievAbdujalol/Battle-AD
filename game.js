@@ -990,6 +990,9 @@ function togglePause() {
         pauseStartTime = Date.now();
         document.getElementById('pause-screen').classList.remove('hidden');
     }
+    
+    // Обновляем мобильные контролы
+    updateMobileControls();
 }
 
 function returnToMainMenu() {
@@ -1082,25 +1085,27 @@ function updateMobileControls() {
     const gameControls = document.getElementById('mobile-game-controls');
     
     if (currentGameMode === GameMode.SINGLE) {
+        // Одиночная игра - показываем оригинальные контролы
         if (singleControls) singleControls.classList.remove('hidden');
         if (multiControls) multiControls.classList.add('hidden');
         
-        // Hide enhanced mobile controls for single player
+        // Отключаем улучшенные мобильные контролы для одиночной игры
         if (window.mobileControls) {
             window.mobileControls.setEnabled(false);
         }
     } else {
+        // Мультиплеер - скрываем оригинальные контролы и показываем улучшенные
         if (singleControls) singleControls.classList.add('hidden');
-        if (multiControls) multiControls.classList.remove('hidden');
+        if (multiControls) multiControls.classList.add('hidden'); // Скрываем старые мультиплеер контролы
         
-        // Enable enhanced mobile controls for multiplayer
+        // Включаем улучшенные мобильные контролы для мультиплеера
         if (window.mobileControls) {
             window.mobileControls.setEnabled(true);
             window.mobileControls.setGameMode(currentGameMode);
         }
     }
     
-    // Показываем кнопки управления игрой только во время игры
+    // Показываем кнопки управления игрой только во время игры (оригинальные мобильные кнопки)
     if (gameControls) {
         if (currentGameState === GameState.PLAYING || 
             currentGameState === GameState.COOPERATIVE || 
