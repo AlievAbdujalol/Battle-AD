@@ -146,6 +146,17 @@ button:active {
     z-index: 20;
 }
 
+/* Hide original mobile controls when enhanced controls are active */
+body:has(.mobile-controls-enhanced) #mobile-controls {
+    display: none !important;
+}
+
+/* Fallback for browsers that don't support :has() */
+.mobile-controls-enhanced + #mobile-controls,
+.mobile-controls-enhanced ~ #mobile-controls {
+    display: none !important;
+}
+
 .control-btn {
     pointer-events: auto;
     background: rgba(255, 255, 255, 0.1);

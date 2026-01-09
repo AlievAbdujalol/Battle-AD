@@ -974,11 +974,22 @@ function updateMobileControls() {
     const multiControls = document.getElementById('multiplayer-controls');
     
     if (currentGameMode === GameMode.SINGLE) {
-        singleControls.classList.remove('hidden');
-        multiControls.classList.add('hidden');
+        if (singleControls) singleControls.classList.remove('hidden');
+        if (multiControls) multiControls.classList.add('hidden');
+        
+        // Hide enhanced mobile controls for single player
+        if (window.mobileControls) {
+            window.mobileControls.setEnabled(false);
+        }
     } else {
-        singleControls.classList.add('hidden');
-        multiControls.classList.remove('hidden');
+        if (singleControls) singleControls.classList.add('hidden');
+        if (multiControls) multiControls.classList.remove('hidden');
+        
+        // Enable enhanced mobile controls for multiplayer
+        if (window.mobileControls) {
+            window.mobileControls.setEnabled(true);
+            window.mobileControls.setGameMode(currentGameMode);
+        }
     }
 }
 
