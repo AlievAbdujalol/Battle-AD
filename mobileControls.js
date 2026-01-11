@@ -52,8 +52,38 @@ class MobileControlsManager {
         
         this.log('Initializing mobile controls manager');
         this.setupGameControlButtons();
+        
+        // Принудительно скрываем все мобильные контролы при инициализации
+        this.hideAllControls();
+        
         this.initialized = true;
         this.log('Mobile controls manager initialized');
+    }
+    
+    // Метод для принудительного скрытия всех контролов
+    hideAllControls() {
+        const mobileControlsContainer = document.getElementById('mobile-controls');
+        const singleControls = document.getElementById('single-player-controls');
+        const multiControls = document.getElementById('multiplayer-controls');
+        const gameControls = document.getElementById('universal-game-controls');
+        
+        if (mobileControlsContainer) {
+            mobileControlsContainer.style.display = 'none';
+            mobileControlsContainer.classList.remove('show');
+        }
+        if (singleControls) {
+            singleControls.classList.add('hidden');
+            singleControls.style.display = 'none';
+        }
+        if (multiControls) {
+            multiControls.classList.add('hidden');
+            multiControls.style.display = 'none';
+        }
+        if (gameControls) {
+            gameControls.style.display = 'none';
+        }
+        
+        this.log('All mobile controls hidden');
     }
     
     setupGameControlButtons() {
@@ -283,40 +313,70 @@ class MobileControlsManager {
         
         const GameMode = window.GameMode || { SINGLE: 'SINGLE', COOPERATIVE: 'COOPERATIVE', VERSUS: 'VERSUS' };
         
-        // Обновляем видимость кнопок управления игрой
+        // Определяем, нужно ли показывать контролы
+        const shouldShowControls = (gameState === GameState.PLAYING || 
+                                   gameState === GameState.COOPERATIVE || 
+                                   gameState === GameState.VERSUS) && this.isEnabled;
+        
+        // Обновляем видимость кнопок управления игрой (пауза/выход)
         const gameControls = document.getElementById('universal-game-controls');
         if (gameControls) {
-            if (gameState === GameState.PLAYING || 
-                gameState === GameState.COOPERATIVE || 
-                gameState === GameState.VERSUS ||
-                gameState === GameState.PAUSED) {
+            if (shouldShowControls || gameState === GameState.PAUSED) {
                 gameControls.style.display = 'flex';
             } else {
                 gameControls.style.display = 'none';
             }
         }
         
-        // Обновляем видимость мобильных контролов
+        // Обновляем видимость мобильных контролов движения
         const singleControls = document.getElementById('single-player-controls');
         const multiControls = document.getElementById('multiplayer-controls');
+        const mobileControlsContainer = document.getElementById('mobile-controls');
         
-        if (gameState === GameState.PLAYING || 
-            gameState === GameState.COOPERATIVE || 
-            gameState === GameState.VERSUS) {
+        if (shouldShowControls) {
+            // Показываем контейнер мобильных контролов
+            if (mobileControlsContainer) {
+                mobileControlsContainer.style.display = 'flex';
+                mobileControlsContainer.classList.add('show');
+            }
             
+            // Показываем нужные контролы в зависимости от режима
             if (gameMode === GameMode.SINGLE) {
-                if (singleControls) singleControls.classList.remove('hidden');
-                if (multiControls) multiControls.classList.add('hidden');
+                if (singleControls) {
+                    singleControls.classList.remove('hidden');
+                    singleControls.style.display = 'flex';
+                }
+                if (multiControls) {
+                    multiControls.classList.add('hidden');
+                    multiControls.style.display = 'none';
+                }
             } else {
-                if (singleControls) singleControls.classList.add('hidden');
-                if (multiControls) multiControls.classList.remove('hidden');
+                if (singleControls) {
+                    singleControls.classList.add('hidden');
+                    singleControls.style.display = 'none';
+                }
+                if (multiControls) {
+                    multiControls.classList.remove('hidden');
+                    multiControls.style.display = 'flex';
+                }
             }
         } else {
-            if (singleControls) singleControls.classList.add('hidden');
-            if (multiControls) multiControls.classList.add('hidden');
+            // Скрываем все мобильные контролы
+            if (mobileControlsContainer) {
+                mobileControlsContainer.style.display = 'none';
+                mobileControlsContainer.classList.remove('show');
+            }
+            if (singleControls) {
+                singleControls.classList.add('hidden');
+                singleControls.style.display = 'none';
+            }
+            if (multiControls) {
+                multiControls.classList.add('hidden');
+                multiControls.style.display = 'none';
+            }
         }
         
-        this.log(`Visibility updated: ${gameState}, ${gameMode}`);
+        this.log(`Visibility updated: ${gameState}, ${gameMode}, showControls: ${shouldShowControls}`);
     }
     
     setGameState(gameState, gameMode) {

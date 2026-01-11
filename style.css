@@ -171,22 +171,20 @@ button:active {
 /* --- Mobile UI --- */
 #mobile-controls {
     position: absolute;
-    bottom: 10px;
+    bottom: 20px;
     left: 0;
     width: 100%;
-    display: flex;
+    display: none; /* Скрыты по умолчанию */
     justify-content: space-between;
-    padding: 0 15px;
+    padding: 0 30px;
     box-sizing: border-box;
     pointer-events: none;
     z-index: 20;
 }
 
-/* Show mobile controls only on touch devices */
-@media (hover: none) and (pointer: coarse) {
-    #mobile-controls {
-        display: flex;
-    }
+/* Show mobile controls only when explicitly enabled */
+#mobile-controls.show {
+    display: flex;
 }
 
 /* Hide on desktop with mouse */

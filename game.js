@@ -1038,6 +1038,40 @@ function monitorKeys() {
 
 window.monitorKeys = monitorKeys;
 
+// Функция для тестирования видимости мобильных контролов
+function testMobileControlsVisibility() {
+    console.log('[Game] Testing mobile controls visibility...');
+    
+    const mobileControls = document.getElementById('mobile-controls');
+    const singleControls = document.getElementById('single-player-controls');
+    const multiControls = document.getElementById('multiplayer-controls');
+    const gameControls = document.getElementById('universal-game-controls');
+    
+    console.log('Current game state:', currentGameState);
+    console.log('Current game mode:', currentGameMode);
+    console.log('Mobile controls container:', {
+        element: mobileControls,
+        display: mobileControls ? mobileControls.style.display : 'not found',
+        hasShowClass: mobileControls ? mobileControls.classList.contains('show') : false
+    });
+    console.log('Single player controls:', {
+        element: singleControls,
+        display: singleControls ? singleControls.style.display : 'not found',
+        hasHiddenClass: singleControls ? singleControls.classList.contains('hidden') : false
+    });
+    console.log('Multiplayer controls:', {
+        element: multiControls,
+        display: multiControls ? multiControls.style.display : 'not found',
+        hasHiddenClass: multiControls ? multiControls.classList.contains('hidden') : false
+    });
+    console.log('Game controls:', {
+        element: gameControls,
+        display: gameControls ? gameControls.style.display : 'not found'
+    });
+}
+
+window.testMobileControlsVisibility = testMobileControlsVisibility;
+
 window.addEventListener('keydown', e => {
     keys[e.code] = true;
     
@@ -1225,6 +1259,9 @@ document.addEventListener('DOMContentLoaded', function() {
         currentGameState = GameState.MODE_SELECT;
         document.getElementById('menu-screen').classList.add('hidden');
         document.getElementById('mode-select-screen').classList.remove('hidden');
+        
+        // Обновляем мобильные контролы при переходе к выбору режима
+        updateMobileControls();
     });
 
     document.getElementById('single-mode-btn').addEventListener('click', () => startGame(GameMode.SINGLE));
@@ -1235,6 +1272,9 @@ document.addEventListener('DOMContentLoaded', function() {
         currentGameState = GameState.MENU;
         document.getElementById('mode-select-screen').classList.add('hidden');
         document.getElementById('menu-screen').classList.remove('hidden');
+        
+        // Обновляем мобильные контролы при возврате в главное меню
+        updateMobileControls();
     });
 
     document.getElementById('restart-button').addEventListener('click', () => {
