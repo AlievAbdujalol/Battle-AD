@@ -132,6 +132,13 @@ button:active {
     transform: scale(1.1);
 }
 
+/* Скрываем кнопку полноэкранного режима на мобильных устройствах */
+@media (max-width: 768px), (hover: none) {
+    #fullscreen-btn {
+        display: none !important;
+    }
+}
+
 /* --- Mobile UI --- */
 #mobile-controls {
     position: absolute;
@@ -503,7 +510,7 @@ button:active {
 
 /* Скрываем селектор языка во время игры */
 body.game-active #language-selector {
-    display: none;
+    display: none !important;
 }
 
 #language-select {

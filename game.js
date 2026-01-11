@@ -106,14 +106,12 @@ const sounds = new SoundManager();
 // --- Multiplayer Session Management ---
 class MultiplayerSession {
     constructor(mode) {
-        console.log(`Creating MultiplayerSession with mode: ${mode}`);
         this.mode = mode;
         this.players = [];
         this.sharedLives = mode === GameMode.COOPERATIVE ? 6 : null;
         this.sharedScore = mode === GameMode.COOPERATIVE ? 0 : null;
         this.winner = null;
         this.startTime = Date.now();
-        console.log(`MultiplayerSession created - sharedScore: ${this.sharedScore}, sharedLives: ${this.sharedLives}`);
     }
 
     addPlayer(playerId, controlScheme, color) {
@@ -127,19 +125,12 @@ class MultiplayerSession {
     }
 
     addScore(points, playerId = null) {
-        console.log(`addScore called with points: ${points}, playerId: ${playerId}, mode: ${this.mode}`);
         if (this.mode === GameMode.COOPERATIVE) {
-            console.log(`Before: sharedScore = ${this.sharedScore}`);
             this.sharedScore += points;
-            console.log(`After: sharedScore = ${this.sharedScore}`);
         } else if (playerId !== null) {
             const player = this.players.find(p => p.playerId === playerId);
             if (player) {
-                console.log(`Before: player ${playerId} individualScore = ${player.individualScore}`);
                 player.individualScore += points;
-                console.log(`After: player ${playerId} individualScore = ${player.individualScore}`);
-            } else {
-                console.log(`Player with ID ${playerId} not found in session`);
             }
         }
     }
@@ -196,6 +187,9 @@ class PlayerManager {
             // Создаем мультиплеерную сессию
             multiplayerSession = new MultiplayerSession(mode);
             
+            // Делаем сессию глобально доступной
+            window.multiplayerSession = multiplayerSession;
+            
             // Создаем двух игроков
             const player1 = multiplayerSession.addPlayer(1, ControlSchemes.PLAYER1, '#4CAF50'); // Зеленый
             const player2 = multiplayerSession.addPlayer(2, ControlSchemes.PLAYER2, '#2196F3'); // Синий
@@ -205,6 +199,9 @@ class PlayerManager {
             
             this.players = [player1, player2];
             players = this.players;
+            
+            console.log(`Multiplayer session created:`, multiplayerSession);
+            console.log(`Players created:`, this.players);
         }
     }
 
@@ -1271,6 +1268,11 @@ function startGame(gameMode = GameMode.SINGLE) {
     // Добавляем класс для скрытия селектора языка
     document.body.classList.add('game-active');
     
+    // Очищаем предыдущую сессию
+    multiplayerSession = null;
+    players = [];
+    player = null;
+    
     // Порядок критичен: сначала карта и база, потом игрок (для respawn)
     map = new GameMap();
     base = new Base();
@@ -1278,6 +1280,10 @@ function startGame(gameMode = GameMode.SINGLE) {
     // Создаем PlayerManager и инициализируем игроков
     playerManager = new PlayerManager();
     playerManager.createPlayers(gameMode);
+    
+    console.log(`Game started with mode: ${gameMode}`);
+    console.log(`MultiplayerSession:`, multiplayerSession);
+    console.log(`Players:`, players);
     
     waveManager = new WaveManager();
     
@@ -1376,26 +1382,17 @@ function update(dt) {
                         
                         // Начисляем очки в зависимости от режима игры
                         if (multiplayerSession) {
-                            console.log(`Multiplayer session found, mode: ${multiplayerSession.mode}`);
                             if (multiplayerSession.mode === GameMode.COOPERATIVE) {
-                                console.log(`Adding 100 points to cooperative score. Current: ${multiplayerSession.sharedScore}`);
                                 multiplayerSession.addScore(100);
-                                console.log(`New cooperative score: ${multiplayerSession.sharedScore}`);
                             } else if (multiplayerSession.mode === GameMode.VERSUS) {
                                 // Найдем игрока, который выстрелил (по ID пули)
                                 const shooterPlayer = players.find(p => p.playerId === b.shooterId);
                                 if (shooterPlayer) {
-                                    console.log(`Adding 100 points to player ${shooterPlayer.playerId}`);
                                     multiplayerSession.addScore(100, shooterPlayer.playerId);
-                                } else {
-                                    console.log(`Shooter player not found for bullet with shooterId: ${b.shooterId}`);
                                 }
                             }
                         } else if (player) {
-                            console.log(`Single player mode, adding 100 points`);
                             player.score += 100;
-                        } else {
-                            console.log(`No player or multiplayer session found!`);
                         }
                         
                         // Генерируем power-up
@@ -1601,9 +1598,7 @@ function drawHUD() {
         ctx.fillText(`🌊 ${i18n.get('wave')}: ${waveManager.wave}`, canvas.width - 180, 26);
         ctx.fillText(`💀 ${i18n.get('enemies')}: ${enemies.length + waveManager.toSpawn}`, canvas.width - 20, 26);
     } else if (multiplayerSession) {
-        console.log(`Drawing HUD for multiplayer, mode: ${multiplayerSession.mode}`);
         if (multiplayerSession.mode === GameMode.COOPERATIVE) {
-            console.log(`Cooperative mode - sharedScore: ${multiplayerSession.sharedScore}, sharedLives: ${multiplayerSession.sharedLives}`);
             // Кооперативный режим - общие жизни и счет
             ctx.textAlign = 'left';
             ctx.fillText(`🛡️ ${i18n.get('lives')}: ${multiplayerSession.sharedLives}`, 20, 26);
