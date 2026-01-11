@@ -1078,6 +1078,13 @@ function returnToModeSelect() {
     updateMobileControls();
 }
 
+// Функция для обновления мобильных контролов
+function updateMobileControls() {
+    if (window.mobileControlsManager) {
+        window.mobileControlsManager.setGameState(currentGameState, currentGameMode);
+    }
+}
+
 // Инициализация обработчиков событий после загрузки DOM
 document.addEventListener('DOMContentLoaded', function() {
     // Инициализируем систему локализации
@@ -1234,6 +1241,11 @@ resizeCanvas();
 
 function startGame(gameMode = GameMode.SINGLE) {
     currentGameMode = gameMode;
+    
+    // Подключаем мобильные контролы для выбранного режима
+    if (window.mobileControlsManager) {
+        window.mobileControlsManager.setGameMode(gameMode);
+    }
     
     // Добавляем класс для скрытия селектора языка
     document.body.classList.add('game-active');
