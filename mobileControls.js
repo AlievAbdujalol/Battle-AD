@@ -1,6 +1,6 @@
 /**
- * Clean Mobile Touch Controls for Battle City
- * Handles both single player and multiplayer modes without duplication
+ * Simple and Reliable Mobile Touch Controls for Battle City
+ * Focus on functionality over features
  */
 
 class MobileControlsManager {
@@ -8,9 +8,7 @@ class MobileControlsManager {
         this.isEnabled = this.isMobileDevice();
         this.initialized = false;
         this.activeControls = null;
-        this.touchHandlers = new Map();
-        this.vibrationEnabled = true;
-        this.debugMode = false;
+        this.eventListeners = [];
         
         // Control mappings
         this.singlePlayerMapping = {
@@ -38,35 +36,12 @@ class MobileControlsManager {
     }
     
     isMobileDevice() {
-        return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ||
-               ('ontouchstart' in window) || 
-               (navigator.maxTouchPoints > 0);
+        // Более простая и надежная проверка
+        return ('ontouchstart' in window) || (navigator.maxTouchPoints > 0);
     }
     
-    // Вибрация для тактильной обратной связи
-    vibrate(pattern = 50) {
-        if (this.vibrationEnabled && navigator.vibrate) {
-            navigator.vibrate(pattern);
-        }
-    }
-    
-    // Логирование для отладки
-    log(message, ...args) {
-        if (this.debugMode) {
-            console.log(`[MobileControls] ${message}`, ...args);
-        }
-    }
-    
-    // Включение/выключение отладочного режима
-    setDebugMode(enabled) {
-        this.debugMode = enabled;
-        this.log('Debug mode', enabled ? 'enabled' : 'disabled');
-    }
-    
-    // Включение/выключение вибрации
-    setVibrationEnabled(enabled) {
-        this.vibrationEnabled = enabled;
-        this.log('Vibration', enabled ? 'enabled' : 'disabled');
+    log(message) {
+        console.log(`[MobileControls] ${message}`);
     }
     
     init() {
@@ -78,11 +53,11 @@ class MobileControlsManager {
         this.log('Initializing mobile controls manager');
         this.setupGameControlButtons();
         this.initialized = true;
-        this.log('Mobile controls manager initialized successfully');
+        this.log('Mobile controls manager initialized');
     }
     
     setupGameControlButtons() {
-        // Create universal game control buttons (pause/exit)
+        // Создаем универсальные кнопки управления игрой
         const existingControls = document.getElementById('universal-game-controls');
         if (existingControls) {
             existingControls.remove();
@@ -90,7 +65,6 @@ class MobileControlsManager {
         
         const gameControlsDiv = document.createElement('div');
         gameControlsDiv.id = 'universal-game-controls';
-        gameControlsDiv.className = 'universal-game-controls';
         gameControlsDiv.style.cssText = `
             position: absolute;
             top: 20px;
@@ -99,16 +73,33 @@ class MobileControlsManager {
             flex-direction: column;
             gap: 10px;
             z-index: 30;
-            pointer-events: auto;
         `;
         
-        // Pause button
-        const pauseBtn = document.createElement('div');
-        pauseBtn.className = 'universal-control-btn';
-        pauseBtn.id = 'universal-pause-btn';
-        pauseBtn.innerHTML = '⏸️';
-        pauseBtn.title = 'Pause';
-        pauseBtn.style.cssText = `
+        // Кнопка паузы
+        const pauseBtn = this.createButton('⏸️', 'Pause');
+        pauseBtn.onclick = () => {
+            if (window.handlePauseKey) window.handlePauseKey();
+        };
+        
+        // Кнопка выхода
+        const exitBtn = this.createButton('🚪', 'Exit');
+        exitBtn.onclick = () => {
+            if (window.handleEscapeKey) window.handleEscapeKey();
+        };
+        
+        gameControlsDiv.appendChild(pauseBtn);
+        gameControlsDiv.appendChild(exitBtn);
+        
+        document.getElementById('game-container').appendChild(gameControlsDiv);
+        
+        this.log('Game control buttons created');
+    }
+    
+    createButton(text, title) {
+        const button = document.createElement('div');
+        button.innerHTML = text;
+        button.title = title;
+        button.style.cssText = `
             width: 50px;
             height: 50px;
             border: 2px solid rgba(255, 255, 255, 0.4);
@@ -119,215 +110,150 @@ class MobileControlsManager {
             display: flex;
             align-items: center;
             justify-content: center;
-            touch-action: none;
+            cursor: pointer;
             user-select: none;
             -webkit-user-select: none;
             -webkit-tap-highlight-color: transparent;
-            transition: all 0.2s ease;
-            cursor: pointer;
-            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
         `;
         
-        // Exit button
-        const exitBtn = document.createElement('div');
-        exitBtn.className = 'universal-control-btn';
-        exitBtn.id = 'universal-exit-btn';
-        exitBtn.innerHTML = '🚪';
-        exitBtn.title = 'Exit';
-        exitBtn.style.cssText = pauseBtn.style.cssText;
-        
-        gameControlsDiv.appendChild(pauseBtn);
-        gameControlsDiv.appendChild(exitBtn);
-        
-        document.getElementById('game-container').appendChild(gameControlsDiv);
-        
-        // Add event listeners
-        this.addButtonListeners(pauseBtn, () => {
-            if (window.handlePauseKey) window.handlePauseKey();
+        // Добавляем эффекты нажатия
+        button.addEventListener('touchstart', (e) => {
+            e.preventDefault();
+            button.style.background = 'rgba(255, 255, 255, 0.2)';
+            button.style.transform = 'scale(0.95)';
         });
         
-        this.addButtonListeners(exitBtn, () => {
-            if (window.handleEscapeKey) window.handleEscapeKey();
+        button.addEventListener('touchend', (e) => {
+            e.preventDefault();
+            button.style.background = 'rgba(0, 0, 0, 0.8)';
+            button.style.transform = 'scale(1)';
         });
+        
+        return button;
     }
     
-    addButtonListeners(element, callback) {
-        const touchStart = (e) => {
-            e.preventDefault();
-            e.stopPropagation();
-            
-            // Визуальная обратная связь
-            element.style.background = 'rgba(255, 255, 255, 0.2)';
-            element.style.borderColor = 'rgba(255, 255, 255, 0.8)';
-            element.style.transform = 'scale(0.95)';
-            
-            // Тактильная обратная связь
-            this.vibrate(30);
-            
-            callback();
-            this.log('Button pressed:', element.id);
-        };
-        
-        const touchEnd = (e) => {
-            e.preventDefault();
-            e.stopPropagation();
-            
-            // Возврат к исходному виду
-            element.style.background = 'rgba(0, 0, 0, 0.8)';
-            element.style.borderColor = 'rgba(255, 255, 255, 0.4)';
-            element.style.transform = 'scale(1)';
-            
-            this.log('Button released:', element.id);
-        };
-        
-        element.addEventListener('touchstart', touchStart, { passive: false });
-        element.addEventListener('touchend', touchEnd, { passive: false });
-        element.addEventListener('touchcancel', touchEnd, { passive: false });
-        element.addEventListener('click', callback);
-    }
-    
-    setupControlsForMode(gameMode) {
+    setGameMode(gameMode) {
         if (!this.isEnabled) return;
         
-        this.log('Setting up controls for mode:', gameMode);
+        this.log(`Setting up controls for mode: ${gameMode}`);
         this.cleanup();
         
         const GameMode = window.GameMode || { SINGLE: 'SINGLE', COOPERATIVE: 'COOPERATIVE', VERSUS: 'VERSUS' };
         
         if (gameMode === GameMode.SINGLE) {
             this.setupSinglePlayerControls();
-            this.log('Single player controls activated');
         } else {
             this.setupMultiplayerControls();
-            this.log('Multiplayer controls activated');
         }
         
         this.activeControls = gameMode;
+        this.log(`Controls setup complete for ${gameMode}`);
     }
     
     setupSinglePlayerControls() {
         const mapping = this.singlePlayerMapping;
-        let controlsCount = 0;
+        let setupCount = 0;
         
         Object.keys(mapping).forEach(buttonId => {
             const button = document.getElementById(buttonId);
             if (button) {
                 const keyCode = mapping[buttonId];
-                
-                const startHandler = (e) => {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    if (window.keys) window.keys[keyCode] = true;
-                    button.classList.add('active');
-                    
-                    // Вибрация для кнопок движения и стрельбы
-                    if (buttonId === 'btn-shoot') {
-                        this.vibrate(80); // Более сильная вибрация для стрельбы
-                    } else {
-                        this.vibrate(40); // Легкая вибрация для движения
-                    }
-                    
-                    this.log('Control activated:', buttonId, '→', keyCode);
-                };
-                
-                const endHandler = (e) => {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    if (window.keys) window.keys[keyCode] = false;
-                    button.classList.remove('active');
-                    this.log('Control deactivated:', buttonId);
-                };
-                
-                // Store handlers for cleanup
-                this.touchHandlers.set(buttonId, { startHandler, endHandler });
-                
-                // Add event listeners
-                button.addEventListener('touchstart', startHandler, { passive: false });
-                button.addEventListener('touchend', endHandler, { passive: false });
-                button.addEventListener('touchcancel', endHandler, { passive: false });
-                button.addEventListener('mousedown', startHandler);
-                button.addEventListener('mouseup', endHandler);
-                button.addEventListener('mouseleave', endHandler);
-                
-                controlsCount++;
+                this.setupButtonEvents(button, keyCode, buttonId);
+                setupCount++;
+            } else {
+                this.log(`Button not found: ${buttonId}`);
             }
         });
         
-        this.log(`Single player controls setup complete: ${controlsCount} buttons`);
+        this.log(`Single player controls: ${setupCount} buttons setup`);
     }
     
     setupMultiplayerControls() {
         const mapping = this.multiplayerMapping;
-        let controlsCount = 0;
+        let setupCount = 0;
         
         Object.keys(mapping).forEach(buttonId => {
             const button = document.getElementById(buttonId);
             if (button) {
                 const keyCode = mapping[buttonId];
-                
-                const startHandler = (e) => {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    if (window.keys) window.keys[keyCode] = true;
-                    button.classList.add('active');
-                    
-                    // Разная вибрация для разных игроков и действий
-                    if (buttonId.includes('shoot')) {
-                        this.vibrate([50, 30, 50]); // Паттерн для стрельбы
-                    } else {
-                        this.vibrate(30); // Короткая вибрация для движения
-                    }
-                    
-                    this.log('Multiplayer control activated:', buttonId, '→', keyCode);
-                };
-                
-                const endHandler = (e) => {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    if (window.keys) window.keys[keyCode] = false;
-                    button.classList.remove('active');
-                    this.log('Multiplayer control deactivated:', buttonId);
-                };
-                
-                // Store handlers for cleanup
-                this.touchHandlers.set(buttonId, { startHandler, endHandler });
-                
-                // Add event listeners
-                button.addEventListener('touchstart', startHandler, { passive: false });
-                button.addEventListener('touchend', endHandler, { passive: false });
-                button.addEventListener('touchcancel', endHandler, { passive: false });
-                button.addEventListener('mousedown', startHandler);
-                button.addEventListener('mouseup', endHandler);
-                button.addEventListener('mouseleave', endHandler);
-                
-                controlsCount++;
+                this.setupButtonEvents(button, keyCode, buttonId);
+                setupCount++;
+            } else {
+                this.log(`Button not found: ${buttonId}`);
             }
         });
         
-        this.log(`Multiplayer controls setup complete: ${controlsCount} buttons`);
+        this.log(`Multiplayer controls: ${setupCount} buttons setup`);
+    }
+    
+    setupButtonEvents(button, keyCode, buttonId) {
+        // Функции обработчиков
+        const handleStart = (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            
+            // Устанавливаем клавишу как нажатую
+            if (window.keys) {
+                window.keys[keyCode] = true;
+            }
+            
+            // Визуальная обратная связь
+            button.classList.add('active');
+            
+            this.log(`Button pressed: ${buttonId} -> ${keyCode}`);
+        };
+        
+        const handleEnd = (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            
+            // Отпускаем клавишу
+            if (window.keys) {
+                window.keys[keyCode] = false;
+            }
+            
+            // Убираем визуальную обратную связь
+            button.classList.remove('active');
+            
+            this.log(`Button released: ${buttonId}`);
+        };
+        
+        // Добавляем обработчики событий
+        button.addEventListener('touchstart', handleStart, { passive: false });
+        button.addEventListener('touchend', handleEnd, { passive: false });
+        button.addEventListener('touchcancel', handleEnd, { passive: false });
+        
+        // Также добавляем поддержку мыши для тестирования на десктопе
+        button.addEventListener('mousedown', handleStart);
+        button.addEventListener('mouseup', handleEnd);
+        button.addEventListener('mouseleave', handleEnd);
+        
+        // Сохраняем обработчики для очистки
+        this.eventListeners.push({
+            element: button,
+            events: [
+                { type: 'touchstart', handler: handleStart },
+                { type: 'touchend', handler: handleEnd },
+                { type: 'touchcancel', handler: handleEnd },
+                { type: 'mousedown', handler: handleStart },
+                { type: 'mouseup', handler: handleEnd },
+                { type: 'mouseleave', handler: handleEnd }
+            ]
+        });
     }
     
     cleanup() {
-        let cleanedCount = 0;
-        
-        // Remove all existing event listeners
-        this.touchHandlers.forEach((handlers, buttonId) => {
-            const button = document.getElementById(buttonId);
-            if (button) {
-                button.removeEventListener('touchstart', handlers.startHandler);
-                button.removeEventListener('touchend', handlers.endHandler);
-                button.removeEventListener('touchcancel', handlers.endHandler);
-                button.removeEventListener('mousedown', handlers.startHandler);
-                button.removeEventListener('mouseup', handlers.endHandler);
-                button.removeEventListener('mouseleave', handlers.endHandler);
-                button.classList.remove('active');
-                cleanedCount++;
-            }
+        // Удаляем все обработчики событий
+        this.eventListeners.forEach(({ element, events }) => {
+            events.forEach(({ type, handler }) => {
+                element.removeEventListener(type, handler);
+            });
+            element.classList.remove('active');
         });
         
-        this.touchHandlers.clear();
+        this.eventListeners = [];
         
-        // Clear any active keys
+        // Очищаем все клавиши
         if (window.keys) {
             Object.values(this.singlePlayerMapping).forEach(key => {
                 window.keys[key] = false;
@@ -337,7 +263,7 @@ class MobileControlsManager {
             });
         }
         
-        this.log(`Cleanup complete: ${cleanedCount} controls cleaned`);
+        this.log('Cleanup completed');
     }
     
     updateVisibility(gameState, gameMode) {
@@ -353,7 +279,7 @@ class MobileControlsManager {
         
         const GameMode = window.GameMode || { SINGLE: 'SINGLE', COOPERATIVE: 'COOPERATIVE', VERSUS: 'VERSUS' };
         
-        // Update game control buttons visibility
+        // Обновляем видимость кнопок управления игрой
         const gameControls = document.getElementById('universal-game-controls');
         if (gameControls) {
             if (gameState === GameState.PLAYING || 
@@ -366,7 +292,7 @@ class MobileControlsManager {
             }
         }
         
-        // Update mobile controls visibility
+        // Обновляем видимость мобильных контролов
         const singleControls = document.getElementById('single-player-controls');
         const multiControls = document.getElementById('multiplayer-controls');
         
@@ -385,38 +311,35 @@ class MobileControlsManager {
             if (singleControls) singleControls.classList.add('hidden');
             if (multiControls) multiControls.classList.add('hidden');
         }
-    }
-    
-    setGameMode(gameMode) {
-        this.setupControlsForMode(gameMode);
+        
+        this.log(`Visibility updated: ${gameState}, ${gameMode}`);
     }
     
     setGameState(gameState, gameMode) {
         this.updateVisibility(gameState, gameMode);
     }
     
-    // Получение статистики контролов
-    getStats() {
-        return {
-            isEnabled: this.isEnabled,
-            initialized: this.initialized,
-            activeControls: this.activeControls,
-            activeHandlers: this.touchHandlers.size,
-            vibrationEnabled: this.vibrationEnabled,
-            debugMode: this.debugMode,
-            deviceInfo: {
-                userAgent: navigator.userAgent,
-                touchPoints: navigator.maxTouchPoints,
-                hasVibration: !!navigator.vibrate
-            }
-        };
-    }
-    
-    // Вывод статистики в консоль
-    printStats() {
-        const stats = this.getStats();
-        console.table(stats);
-        console.log('Device Info:', stats.deviceInfo);
+    // Метод для тестирования
+    testControls() {
+        this.log('Testing mobile controls...');
+        this.log(`Mobile device: ${this.isEnabled}`);
+        this.log(`Initialized: ${this.initialized}`);
+        this.log(`Active controls: ${this.activeControls}`);
+        this.log(`Event listeners: ${this.eventListeners.length}`);
+        
+        // Проверяем наличие кнопок
+        const singleButtons = Object.keys(this.singlePlayerMapping);
+        const multiButtons = Object.keys(this.multiplayerMapping);
+        
+        singleButtons.forEach(buttonId => {
+            const button = document.getElementById(buttonId);
+            this.log(`Single button ${buttonId}: ${button ? 'Found' : 'Missing'}`);
+        });
+        
+        multiButtons.forEach(buttonId => {
+            const button = document.getElementById(buttonId);
+            this.log(`Multi button ${buttonId}: ${button ? 'Found' : 'Missing'}`);
+        });
     }
     
     destroy() {
@@ -426,29 +349,35 @@ class MobileControlsManager {
         if (gameControls) {
             gameControls.remove();
         }
+        
+        this.log('Mobile controls destroyed');
     }
 }
 
-// Global instance
+// Глобальная переменная
 let mobileControlsManager = null;
 
-// Initialize when DOM is ready
+// Инициализация при загрузке DOM
 document.addEventListener('DOMContentLoaded', function() {
+    console.log('[MobileControls] DOM loaded, initializing...');
+    
     setTimeout(() => {
-        mobileControlsManager = new MobileControlsManager();
-        window.mobileControlsManager = mobileControlsManager;
-        
-        // Автоматически включаем отладку на мобильных устройствах в режиме разработки
-        if (mobileControlsManager.isEnabled && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')) {
-            mobileControlsManager.setDebugMode(true);
-            mobileControlsManager.log('Development mode detected - debug enabled');
+        try {
+            mobileControlsManager = new MobileControlsManager();
+            window.mobileControlsManager = mobileControlsManager;
+            
+            console.log('[MobileControls] Manager created successfully');
+            
+            // Тестируем контролы
+            if (mobileControlsManager.isEnabled) {
+                mobileControlsManager.testControls();
+            }
+            
+        } catch (error) {
+            console.error('[MobileControls] Initialization failed:', error);
         }
-        
-        console.log('Mobile controls manager initialized');
-        
-        // Выводим статистику если включена отладка
-        if (mobileControlsManager.debugMode) {
-            mobileControlsManager.printStats();
-        }
-    }, 100);
+    }, 200);
 });
+
+// Экспортируем для глобального доступа
+window.MobileControlsManager = MobileControlsManager;

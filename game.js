@@ -936,6 +936,78 @@ let lastTime = 0;
 let isPaused = false;
 let pauseStartTime = 0;
 
+// Диагностика мобильных контролов
+function debugMobileControls() {
+    console.log('[Game] Mobile controls debug:');
+    console.log('- keys object:', keys);
+    console.log('- mobileControlsManager:', window.mobileControlsManager);
+    
+    if (window.mobileControlsManager) {
+        console.log('- isEnabled:', window.mobileControlsManager.isEnabled);
+        console.log('- initialized:', window.mobileControlsManager.initialized);
+        console.log('- activeControls:', window.mobileControlsManager.activeControls);
+    }
+    
+    // Проверяем наличие кнопок
+    const singleButtons = ['btn-up', 'btn-down', 'btn-left', 'btn-right', 'btn-shoot'];
+    singleButtons.forEach(id => {
+        const btn = document.getElementById(id);
+        console.log(`- Button ${id}:`, btn ? 'Found' : 'Missing');
+    });
+}
+
+// Делаем функцию глобально доступной
+window.debugMobileControls = debugMobileControls;
+
+// Функция для принудительного тестирования мобильных контролов
+function forceMobileControlsTest() {
+    console.log('[Game] Force testing mobile controls...');
+    
+    if (!window.mobileControlsManager) {
+        console.error('[Game] mobileControlsManager not found!');
+        return;
+    }
+    
+    // Принудительно включаем мобильные контролы
+    window.mobileControlsManager.isEnabled = true;
+    window.mobileControlsManager.setGameMode('SINGLE');
+    
+    // Тестируем каждую кнопку
+    const testButtons = ['btn-up', 'btn-down', 'btn-left', 'btn-right', 'btn-shoot'];
+    const keyMapping = {
+        'btn-up': 'ArrowUp',
+        'btn-down': 'ArrowDown',
+        'btn-left': 'ArrowLeft',
+        'btn-right': 'ArrowRight',
+        'btn-shoot': 'Space'
+    };
+    
+    testButtons.forEach((buttonId, index) => {
+        setTimeout(() => {
+            const button = document.getElementById(buttonId);
+            const keyCode = keyMapping[buttonId];
+            
+            if (button) {
+                console.log(`[Game] Testing button ${buttonId} -> ${keyCode}`);
+                
+                // Симулируем нажатие
+                keys[keyCode] = true;
+                button.classList.add('active');
+                
+                setTimeout(() => {
+                    keys[keyCode] = false;
+                    button.classList.remove('active');
+                    console.log(`[Game] Button ${buttonId} test complete`);
+                }, 200);
+            } else {
+                console.error(`[Game] Button ${buttonId} not found!`);
+            }
+        }, index * 300);
+    });
+}
+
+window.forceMobileControlsTest = forceMobileControlsTest;
+
 window.addEventListener('keydown', e => {
     keys[e.code] = true;
     
@@ -1245,7 +1317,15 @@ function startGame(gameMode = GameMode.SINGLE) {
     // Подключаем мобильные контролы для выбранного режима
     if (window.mobileControlsManager) {
         window.mobileControlsManager.setGameMode(gameMode);
+        console.log('[Game] Mobile controls setup for mode:', gameMode);
+    } else {
+        console.warn('[Game] mobileControlsManager not found!');
     }
+    
+    // Диагностика мобильных контролов
+    setTimeout(() => {
+        debugMobileControls();
+    }, 500);
     
     // Добавляем класс для скрытия селектора языка
     document.body.classList.add('game-active');
