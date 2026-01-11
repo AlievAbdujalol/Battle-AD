@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>Mobile Controls Test</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="mobileControls.css">
+    <style>
+        body {
+            background: #1a1a1a;
+            color: white;
+            font-family: 'Courier New', monospace;
+            padding: 20px;
+        }
+        
+        .test-container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        
+        .status-panel {
+            background: rgba(0,0,0,0.8);
+            border: 1px solid #444;
+            padding: 15px;
+            margin-bottom: 20px;
+            border-radius: 5px;
+        }
+        
+        .key-status {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            gap: 10px;
+            margin-top: 10px;
+        }
+        
+        .key-indicator {
+            background: rgba(255,255,255,0.1);
+            padding: 8px;
+            border-radius: 3px;
+            text-align: center;
+            transition: all 0.2s;
+        }
+        
+        .key-indicator.active {
+            background: rgba(0,255,0,0.3);
+            color: #0f0;
+        }
+        
+        .controls-demo {
+            position: relative;
+            height: 300px;
+            background: rgba(0,0,0,0.5);
+            border: 1px solid #444;
+            border-radius: 5px;
+            margin: 20px 0;
+        }
+        
+        .demo-controls {
+            position: absolute;
+            bottom: 20px;
+            left: 0;
+            width: 100%;
+            display: flex;
+            justify-content: space-between;
+            padding: 0 30px;
+            box-sizing: border-box;
+            pointer-events: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="test-container">
+        <h1>🎮 Mobile Controls Test</h1>
+        
+        <div class="status-panel">
+            <h3>📊 Control Status</h3>
+            <div id="device-info"></div>
+            <div class="key-status" id="key-status">
+                <!-- Key indicators will be populated by JavaScript -->
+            </div>
+        </div>
+        
+        <div class="status-panel">
+            <h3>🔧 Debug Controls</h3>
+            <button onclick="toggleDebug()">Toggle Debug Mode</button>
+            <button onclick="toggleVibration()">Toggle Vibration</button>
+            <button onclick="showStats()">Show Stats</button>
+            <button onclick="testVibration()">Test Vibration</button>
+        </div>
+        
+        <div class="controls-demo">
+            <h3 style="text-align: center; margin-top: 20px;">Touch the controls below</h3>
+            
+            <!-- Single Player Controls -->
+            <div id="single-player-controls" class="demo-controls">
+                <div class="d-pad">
+                    <button id="btn-up" class="control-btn">▲</button>
+                    <div class="d-pad-horizontal">
+                        <button id="btn-left" class="control-btn">◀</button>
+                        <button id="btn-right" class="control-btn">▶</button>
+                    </div>
+                    <button id="btn-down" class="control-btn">▼</button>
+                </div>
+                <button id="btn-shoot" class="control-btn" style="width: 90px; height: 90px; font-size: 32px; background: rgba(255, 0, 0, 0.3); border-color: rgba(255, 0, 0, 0.5);">🔥</button>
+            </div>
+        </div>
+        
+        <div class="status-panel">
+            <h3>📱 Device Information</h3>
+            <div id="device-details"></div>
+        </div>
+    </div>
+
+    <!-- Universal Game Controls -->
+    <div id="universal-game-controls" class="universal-game-controls" style="display: flex;">
+        <!-- Will be created by mobileControls.js -->
+    </div>
+
+    <script>
+        // Simulate game keys object
+        window.keys = {};
+        
+        // Simulate GameMode enum
+        window.GameMode = {
+            SINGLE: 'SINGLE',
+            COOPERATIVE: 'COOPERATIVE',
+            VERSUS: 'VERSUS'
+        };
+        
+        // Key mappings for display
+        const keyMappings = {
+            'ArrowUp': '↑',
+            'ArrowDown': '↓', 
+            'ArrowLeft': '←',
+            'ArrowRight': '→',
+            'Space': 'FIRE',
+            'KeyW': 'W',
+            'KeyS': 'S',
+            'KeyA': 'A',
+            'KeyD': 'D',
+            'Enter': 'ENTER'
+        };
+        
+        function updateKeyStatus() {
+            const statusContainer = document.getElementById('key-status');
+            statusContainer.innerHTML = '';
+            
+            Object.keys(keyMappings).forEach(key => {
+                const indicator = document.createElement('div');
+                indicator.className = 'key-indicator';
+                indicator.textContent = keyMappings[key];
+                
+                if (window.keys[key]) {
+                    indicator.classList.add('active');
+                }
+                
+                statusContainer.appendChild(indicator);
+            });
+        }
+        
+        function updateDeviceInfo() {
+            const deviceInfo = document.getElementById('device-info');
+            const manager = window.mobileControlsManager;
+            
+            if (manager) {
+                deviceInfo.innerHTML = `
+                    <strong>Mobile Device:</strong> ${manager.isEnabled ? 'Yes' : 'No'}<br>
+                    <strong>Initialized:</strong> ${manager.initialized ? 'Yes' : 'No'}<br>
+                    <strong>Active Handlers:</strong> ${manager.touchHandlers.size}<br>
+                    <strong>Vibration:</strong> ${manager.vibrationEnabled ? 'Enabled' : 'Disabled'}<br>
+                    <strong>Debug Mode:</strong> ${manager.debugMode ? 'On' : 'Off'}
+                `;
+            }
+        }
+        
+        function updateDeviceDetails() {
+            const details = document.getElementById('device-details');
+            details.innerHTML = `
+                <strong>User Agent:</strong> ${navigator.userAgent}<br>
+                <strong>Touch Points:</strong> ${navigator.maxTouchPoints}<br>
+                <strong>Vibration Support:</strong> ${navigator.vibrate ? 'Yes' : 'No'}<br>
+                <strong>Screen Size:</strong> ${window.innerWidth}x${window.innerHeight}<br>
+                <strong>Device Pixel Ratio:</strong> ${window.devicePixelRatio}
+            `;
+        }
+        
+        function toggleDebug() {
+            if (window.mobileControlsManager) {
+                const newState = !window.mobileControlsManager.debugMode;
+                window.mobileControlsManager.setDebugMode(newState);
+                updateDeviceInfo();
+            }
+        }
+        
+        function toggleVibration() {
+            if (window.mobileControlsManager) {
+                const newState = !window.mobileControlsManager.vibrationEnabled;
+                window.mobileControlsManager.setVibrationEnabled(newState);
+                updateDeviceInfo();
+            }
+        }
+        
+        function showStats() {
+            if (window.mobileControlsManager) {
+                window.mobileControlsManager.printStats();
+            }
+        }
+        
+        function testVibration() {
+            if (window.mobileControlsManager) {
+                window.mobileControlsManager.vibrate([100, 50, 100, 50, 200]);
+            }
+        }
+        
+        // Update status every 100ms
+        setInterval(() => {
+            updateKeyStatus();
+            updateDeviceInfo();
+        }, 100);
+        
+        // Initialize when page loads
+        document.addEventListener('DOMContentLoaded', function() {
+            setTimeout(() => {
+                updateDeviceDetails();
+                
+                // Setup mobile controls for single player mode
+                if (window.mobileControlsManager) {
+                    window.mobileControlsManager.setGameMode(window.GameMode.SINGLE);
+                    window.mobileControlsManager.setDebugMode(true);
+                }
+            }, 200);
+        });
+    </script>
+    
+    <script src="mobileControls.js"></script>
+</body>
+</html>

@@ -9,6 +9,8 @@ class MobileControlsManager {
         this.initialized = false;
         this.activeControls = null;
         this.touchHandlers = new Map();
+        this.vibrationEnabled = true;
+        this.debugMode = false;
         
         // Control mappings
         this.singlePlayerMapping = {
@@ -41,15 +43,42 @@ class MobileControlsManager {
                (navigator.maxTouchPoints > 0);
     }
     
+    // Вибрация для тактильной обратной связи
+    vibrate(pattern = 50) {
+        if (this.vibrationEnabled && navigator.vibrate) {
+            navigator.vibrate(pattern);
+        }
+    }
+    
+    // Логирование для отладки
+    log(message, ...args) {
+        if (this.debugMode) {
+            console.log(`[MobileControls] ${message}`, ...args);
+        }
+    }
+    
+    // Включение/выключение отладочного режима
+    setDebugMode(enabled) {
+        this.debugMode = enabled;
+        this.log('Debug mode', enabled ? 'enabled' : 'disabled');
+    }
+    
+    // Включение/выключение вибрации
+    setVibrationEnabled(enabled) {
+        this.vibrationEnabled = enabled;
+        this.log('Vibration', enabled ? 'enabled' : 'disabled');
+    }
+    
     init() {
         if (!this.isEnabled) {
-            console.log('Mobile controls disabled - not a mobile device');
+            this.log('Mobile controls disabled - not a mobile device');
             return;
         }
         
-        console.log('Initializing mobile controls manager');
+        this.log('Initializing mobile controls manager');
         this.setupGameControlButtons();
         this.initialized = true;
+        this.log('Mobile controls manager initialized successfully');
     }
     
     setupGameControlButtons() {
@@ -126,18 +155,29 @@ class MobileControlsManager {
         const touchStart = (e) => {
             e.preventDefault();
             e.stopPropagation();
+            
+            // Визуальная обратная связь
             element.style.background = 'rgba(255, 255, 255, 0.2)';
             element.style.borderColor = 'rgba(255, 255, 255, 0.8)';
             element.style.transform = 'scale(0.95)';
+            
+            // Тактильная обратная связь
+            this.vibrate(30);
+            
             callback();
+            this.log('Button pressed:', element.id);
         };
         
         const touchEnd = (e) => {
             e.preventDefault();
             e.stopPropagation();
+            
+            // Возврат к исходному виду
             element.style.background = 'rgba(0, 0, 0, 0.8)';
             element.style.borderColor = 'rgba(255, 255, 255, 0.4)';
             element.style.transform = 'scale(1)';
+            
+            this.log('Button released:', element.id);
         };
         
         element.addEventListener('touchstart', touchStart, { passive: false });
@@ -149,14 +189,17 @@ class MobileControlsManager {
     setupControlsForMode(gameMode) {
         if (!this.isEnabled) return;
         
+        this.log('Setting up controls for mode:', gameMode);
         this.cleanup();
         
         const GameMode = window.GameMode || { SINGLE: 'SINGLE', COOPERATIVE: 'COOPERATIVE', VERSUS: 'VERSUS' };
         
         if (gameMode === GameMode.SINGLE) {
             this.setupSinglePlayerControls();
+            this.log('Single player controls activated');
         } else {
             this.setupMultiplayerControls();
+            this.log('Multiplayer controls activated');
         }
         
         this.activeControls = gameMode;
@@ -164,6 +207,7 @@ class MobileControlsManager {
     
     setupSinglePlayerControls() {
         const mapping = this.singlePlayerMapping;
+        let controlsCount = 0;
         
         Object.keys(mapping).forEach(buttonId => {
             const button = document.getElementById(buttonId);
@@ -175,6 +219,15 @@ class MobileControlsManager {
                     e.stopPropagation();
                     if (window.keys) window.keys[keyCode] = true;
                     button.classList.add('active');
+                    
+                    // Вибрация для кнопок движения и стрельбы
+                    if (buttonId === 'btn-shoot') {
+                        this.vibrate(80); // Более сильная вибрация для стрельбы
+                    } else {
+                        this.vibrate(40); // Легкая вибрация для движения
+                    }
+                    
+                    this.log('Control activated:', buttonId, '→', keyCode);
                 };
                 
                 const endHandler = (e) => {
@@ -182,6 +235,7 @@ class MobileControlsManager {
                     e.stopPropagation();
                     if (window.keys) window.keys[keyCode] = false;
                     button.classList.remove('active');
+                    this.log('Control deactivated:', buttonId);
                 };
                 
                 // Store handlers for cleanup
@@ -194,12 +248,17 @@ class MobileControlsManager {
                 button.addEventListener('mousedown', startHandler);
                 button.addEventListener('mouseup', endHandler);
                 button.addEventListener('mouseleave', endHandler);
+                
+                controlsCount++;
             }
         });
+        
+        this.log(`Single player controls setup complete: ${controlsCount} buttons`);
     }
     
     setupMultiplayerControls() {
         const mapping = this.multiplayerMapping;
+        let controlsCount = 0;
         
         Object.keys(mapping).forEach(buttonId => {
             const button = document.getElementById(buttonId);
@@ -211,6 +270,15 @@ class MobileControlsManager {
                     e.stopPropagation();
                     if (window.keys) window.keys[keyCode] = true;
                     button.classList.add('active');
+                    
+                    // Разная вибрация для разных игроков и действий
+                    if (buttonId.includes('shoot')) {
+                        this.vibrate([50, 30, 50]); // Паттерн для стрельбы
+                    } else {
+                        this.vibrate(30); // Короткая вибрация для движения
+                    }
+                    
+                    this.log('Multiplayer control activated:', buttonId, '→', keyCode);
                 };
                 
                 const endHandler = (e) => {
@@ -218,6 +286,7 @@ class MobileControlsManager {
                     e.stopPropagation();
                     if (window.keys) window.keys[keyCode] = false;
                     button.classList.remove('active');
+                    this.log('Multiplayer control deactivated:', buttonId);
                 };
                 
                 // Store handlers for cleanup
@@ -230,11 +299,17 @@ class MobileControlsManager {
                 button.addEventListener('mousedown', startHandler);
                 button.addEventListener('mouseup', endHandler);
                 button.addEventListener('mouseleave', endHandler);
+                
+                controlsCount++;
             }
         });
+        
+        this.log(`Multiplayer controls setup complete: ${controlsCount} buttons`);
     }
     
     cleanup() {
+        let cleanedCount = 0;
+        
         // Remove all existing event listeners
         this.touchHandlers.forEach((handlers, buttonId) => {
             const button = document.getElementById(buttonId);
@@ -246,6 +321,7 @@ class MobileControlsManager {
                 button.removeEventListener('mouseup', handlers.endHandler);
                 button.removeEventListener('mouseleave', handlers.endHandler);
                 button.classList.remove('active');
+                cleanedCount++;
             }
         });
         
@@ -260,6 +336,8 @@ class MobileControlsManager {
                 window.keys[key] = false;
             });
         }
+        
+        this.log(`Cleanup complete: ${cleanedCount} controls cleaned`);
     }
     
     updateVisibility(gameState, gameMode) {
@@ -317,6 +395,30 @@ class MobileControlsManager {
         this.updateVisibility(gameState, gameMode);
     }
     
+    // Получение статистики контролов
+    getStats() {
+        return {
+            isEnabled: this.isEnabled,
+            initialized: this.initialized,
+            activeControls: this.activeControls,
+            activeHandlers: this.touchHandlers.size,
+            vibrationEnabled: this.vibrationEnabled,
+            debugMode: this.debugMode,
+            deviceInfo: {
+                userAgent: navigator.userAgent,
+                touchPoints: navigator.maxTouchPoints,
+                hasVibration: !!navigator.vibrate
+            }
+        };
+    }
+    
+    // Вывод статистики в консоль
+    printStats() {
+        const stats = this.getStats();
+        console.table(stats);
+        console.log('Device Info:', stats.deviceInfo);
+    }
+    
     destroy() {
         this.cleanup();
         
@@ -336,6 +438,17 @@ document.addEventListener('DOMContentLoaded', function() {
         mobileControlsManager = new MobileControlsManager();
         window.mobileControlsManager = mobileControlsManager;
         
+        // Автоматически включаем отладку на мобильных устройствах в режиме разработки
+        if (mobileControlsManager.isEnabled && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')) {
+            mobileControlsManager.setDebugMode(true);
+            mobileControlsManager.log('Development mode detected - debug enabled');
+        }
+        
         console.log('Mobile controls manager initialized');
+        
+        // Выводим статистику если включена отладка
+        if (mobileControlsManager.debugMode) {
+            mobileControlsManager.printStats();
+        }
     }, 100);
 });

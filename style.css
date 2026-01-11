@@ -171,12 +171,12 @@ button:active {
 /* --- Mobile UI --- */
 #mobile-controls {
     position: absolute;
-    bottom: 20px;
+    bottom: 10px;
     left: 0;
     width: 100%;
     display: flex;
     justify-content: space-between;
-    padding: 0 30px;
+    padding: 0 15px;
     box-sizing: border-box;
     pointer-events: none;
     z-index: 20;
@@ -212,37 +212,59 @@ button:active {
     user-select: none;
     touch-action: manipulation;
     -webkit-tap-highlight-color: transparent;
-    transition: background 0.1s, transform 0.1s, border 0.1s;
+    transition: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
     box-shadow: 0 4px 8px rgba(0,0,0,0.3);
     cursor: pointer;
+    position: relative;
+    overflow: hidden;
+}
+
+.control-btn::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 0;
+    height: 0;
+    background: rgba(255, 255, 255, 0.3);
+    border-radius: 50%;
+    transform: translate(-50%, -50%);
+    transition: width 0.3s ease, height 0.3s ease;
+}
+
+.control-btn:active::before,
+.control-btn.active::before {
+    width: 100%;
+    height: 100%;
 }
 
 .control-btn:active,
 .control-btn.active {
-    background: rgba(255, 255, 255, 0.3);
-    border-color: rgba(255, 255, 255, 0.5);
+    background: rgba(255, 255, 255, 0.25);
+    border-color: rgba(255, 255, 255, 0.6);
     transform: scale(0.95);
+    box-shadow: 0 2px 4px rgba(0,0,0,0.4), inset 0 2px 4px rgba(255,255,255,0.2);
 }
 
 .d-pad {
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 5px;
+    gap: 3px;
 }
 
 .d-pad-horizontal {
     display: flex;
-    gap: 45px;
+    gap: 30px;
 }
 
 #btn-shoot {
-    width: 90px;
-    height: 90px;
+    width: 70px;
+    height: 70px;
     background: rgba(255, 0, 0, 0.3);
     border-color: rgba(255, 0, 0, 0.5);
     align-self: flex-end;
-    font-size: 32px;
+    font-size: 28px;
 }
 
 #btn-shoot:active,
@@ -253,65 +275,14 @@ button:active {
 /* Mobile responsive adjustments */
 @media (max-width: 768px) {
     #mobile-controls {
-        bottom: 15px;
-        padding: 0 20px;
-    }
-    
-    .control-btn {
-        width: 55px;
-        height: 55px;
-        font-size: 22px;
-    }
-    
-    .d-pad-horizontal {
-        gap: 35px;
-    }
-    
-    #btn-shoot {
-        width: 80px;
-        height: 80px;
-        font-size: 28px;
-    }
-}
-
-@media (max-width: 480px) {
-    #mobile-controls {
-        bottom: 10px;
-        padding: 0 15px;
-    }
-    
-    .control-btn {
-        width: 50px;
-        height: 50px;
-        font-size: 20px;
-    }
-    
-    .d-pad-horizontal {
-        gap: 30px;
-    }
-    
-    #btn-shoot {
-        width: 70px;
-        height: 70px;
-        font-size: 24px;
-    }
-}
-
-/* Landscape orientation adjustments */
-@media (orientation: landscape) and (max-height: 500px) {
-    #mobile-controls {
-        bottom: 5px;
-        padding: 0 10px;
+        bottom: 8px;
+        padding: 0 12px;
     }
     
     .control-btn {
         width: 45px;
         height: 45px;
         font-size: 18px;
-    }
-    
-    .d-pad {
-        gap: 3px;
     }
     
     .d-pad-horizontal {
@@ -321,7 +292,58 @@ button:active {
     #btn-shoot {
         width: 60px;
         height: 60px;
-        font-size: 20px;
+        font-size: 24px;
+    }
+}
+
+@media (max-width: 480px) {
+    #mobile-controls {
+        bottom: 5px;
+        padding: 0 8px;
+    }
+    
+    .control-btn {
+        width: 40px;
+        height: 40px;
+        font-size: 16px;
+    }
+    
+    .d-pad-horizontal {
+        gap: 20px;
+    }
+    
+    #btn-shoot {
+        width: 55px;
+        height: 55px;
+        font-size: 22px;
+    }
+}
+
+/* Landscape orientation adjustments */
+@media (orientation: landscape) and (max-height: 500px) {
+    #mobile-controls {
+        bottom: 3px;
+        padding: 0 5px;
+    }
+    
+    .control-btn {
+        width: 35px;
+        height: 35px;
+        font-size: 14px;
+    }
+    
+    .d-pad {
+        gap: 2px;
+    }
+    
+    .d-pad-horizontal {
+        gap: 18px;
+    }
+    
+    #btn-shoot {
+        width: 50px;
+        height: 50px;
+        font-size: 18px;
     }
 }
 /* --- Mode Selection Screen --- */
@@ -382,21 +404,22 @@ button:active {
 /* --- Multiplayer Mobile Controls --- */
 .mobile-control-set {
     position: absolute;
-    bottom: 20px;
+    bottom: 10px;
     left: 0;
     width: 100%;
     display: flex;
     justify-content: space-between;
-    padding: 0 30px;
+    padding: 0 15px;
     box-sizing: border-box;
     pointer-events: none;
+    z-index: 25;
 }
 
 .player-controls {
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 8px;
+    gap: 5px;
     pointer-events: auto;
 }
 
@@ -411,11 +434,11 @@ button:active {
 .player-label {
     background: rgba(255, 255, 255, 0.2);
     color: white;
-    padding: 4px 8px;
-    border-radius: 12px;
-    font-size: 11px;
+    padding: 2px 6px;
+    border-radius: 8px;
+    font-size: 9px;
     font-weight: bold;
-    margin-bottom: 3px;
+    margin-bottom: 2px;
 }
 
 .player1-controls .player-label {
@@ -427,24 +450,24 @@ button:active {
 }
 
 .d-pad.small {
-    gap: 3px;
+    gap: 2px;
 }
 
 .d-pad.small .d-pad-horizontal {
-    gap: 25px;
+    gap: 15px;
 }
 
 .control-btn.small {
-    width: 45px;
-    height: 45px;
-    font-size: 18px;
+    width: 35px;
+    height: 35px;
+    font-size: 14px;
 }
 
 .control-btn.small#btn-p1-shoot,
 .control-btn.small#btn-p2-shoot {
-    width: 60px;
-    height: 60px;
-    font-size: 24px;
+    width: 45px;
+    height: 45px;
+    font-size: 18px;
     background: rgba(255, 0, 0, 0.3);
     border-color: rgba(255, 0, 0, 0.5);
 }
@@ -459,66 +482,12 @@ button:active {
 /* Mobile responsive adjustments for multiplayer */
 @media (max-width: 768px) {
     .mobile-control-set {
-        bottom: 15px;
-        padding: 0 20px;
+        bottom: 8px;
+        padding: 0 12px;
     }
     
     .player-controls {
-        gap: 5px;
-    }
-    
-    .control-btn.small {
-        width: 40px;
-        height: 40px;
-        font-size: 16px;
-    }
-    
-    .control-btn.small#btn-p1-shoot,
-    .control-btn.small#btn-p2-shoot {
-        width: 55px;
-        height: 55px;
-        font-size: 22px;
-    }
-    
-    .d-pad.small .d-pad-horizontal {
-        gap: 20px;
-    }
-}
-
-@media (max-width: 480px) {
-    .mobile-control-set {
-        bottom: 10px;
-        padding: 0 15px;
-    }
-    
-    .control-btn.small {
-        width: 35px;
-        height: 35px;
-        font-size: 14px;
-    }
-    
-    .control-btn.small#btn-p1-shoot,
-    .control-btn.small#btn-p2-shoot {
-        width: 50px;
-        height: 50px;
-        font-size: 20px;
-    }
-    
-    .d-pad.small .d-pad-horizontal {
-        gap: 18px;
-    }
-    
-    .player-label {
-        font-size: 10px;
-        padding: 3px 6px;
-    }
-}
-
-/* Landscape orientation adjustments for multiplayer */
-@media (orientation: landscape) and (max-height: 500px) {
-    .mobile-control-set {
-        bottom: 5px;
-        padding: 0 10px;
+        gap: 3px;
     }
     
     .control-btn.small {
@@ -529,22 +498,80 @@ button:active {
     
     .control-btn.small#btn-p1-shoot,
     .control-btn.small#btn-p2-shoot {
-        width: 45px;
-        height: 45px;
-        font-size: 18px;
-    }
-    
-    .d-pad.small {
-        gap: 2px;
+        width: 42px;
+        height: 42px;
+        font-size: 16px;
     }
     
     .d-pad.small .d-pad-horizontal {
-        gap: 15px;
+        gap: 12px;
+    }
+}
+
+@media (max-width: 480px) {
+    .mobile-control-set {
+        bottom: 5px;
+        padding: 0 8px;
+    }
+    
+    .control-btn.small {
+        width: 28px;
+        height: 28px;
+        font-size: 11px;
+    }
+    
+    .control-btn.small#btn-p1-shoot,
+    .control-btn.small#btn-p2-shoot {
+        width: 38px;
+        height: 38px;
+        font-size: 14px;
+    }
+    
+    .d-pad.small .d-pad-horizontal {
+        gap: 10px;
     }
     
     .player-label {
-        font-size: 9px;
-        padding: 2px 5px;
+        font-size: 8px;
+        padding: 1px 4px;
+    }
+}
+
+/* Landscape orientation adjustments for multiplayer */
+@media (orientation: landscape) and (max-height: 500px) {
+    .mobile-control-set {
+        bottom: 3px;
+        padding: 0 5px;
+    }
+    
+    .control-btn.small {
+        width: 25px;
+        height: 25px;
+        font-size: 10px;
+    }
+    
+    .control-btn.small#btn-p1-shoot,
+    .control-btn.small#btn-p2-shoot {
+        width: 35px;
+        height: 35px;
+        font-size: 12px;
+    }
+    
+    .d-pad.small {
+        gap: 1px;
+    }
+    
+    .d-pad.small .d-pad-horizontal {
+        gap: 8px;
+    }
+    
+    .player-label {
+        font-size: 7px;
+        padding: 1px 3px;
+    }
+    
+    .player-controls {
+        gap: 2px;
     }
 }
 
