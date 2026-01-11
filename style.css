@@ -767,3 +767,28 @@ body.game-active #language-selector {
         padding: 6px 10px;
     }
 }
+/* Hide virtual joystick on desktop devices */
+@media (hover: hover) and (pointer: fine) {
+    #virtual-joystick-overlay { 
+        display: none !important; 
+    }
+}
+
+/* Additional desktop detection - hide on large screens */
+@media (min-width: 1024px) {
+    #virtual-joystick-overlay,
+    #mobile-controls {
+        display: none !important;
+    }
+}
+
+/* Force hide mobile UI on desktop browsers */
+@media (min-width: 769px) and (hover: hover) {
+    #virtual-joystick-overlay,
+    #mobile-controls,
+    .mobile-control-set,
+    .mobile-game-controls {
+        display: none !important;
+        visibility: hidden !important;
+    }
+}

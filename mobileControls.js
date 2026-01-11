@@ -36,8 +36,44 @@ class MobileControlsManager {
     }
     
     isMobileDevice() {
-        // Более простая и надежная проверка
-        return ('ontouchstart' in window) || (navigator.maxTouchPoints > 0);
+        // Проверяем User Agent на мобильные устройства
+        const userAgent = navigator.userAgent.toLowerCase();
+        const mobileKeywords = [
+            'android', 'iphone', 'ipad', 'ipod', 'blackberry', 
+            'windows phone', 'mobile', 'webos', 'opera mini'
+        ];
+        
+        const isMobileUA = mobileKeywords.some(keyword => userAgent.includes(keyword));
+        
+        // Проверяем размер экрана (мобильные устройства обычно имеют ширину <= 768px)
+        const isSmallScreen = window.innerWidth <= 768;
+        
+        // Проверяем наличие touch events
+        const hasTouch = ('ontouchstart' in window) || (navigator.maxTouchPoints > 0);
+        
+        // Исключаем настольные браузеры с поддержкой hover
+        const hasHover = window.matchMedia('(hover: hover)').matches;
+        const hasFinePointer = window.matchMedia('(pointer: fine)').matches;
+        const isDesktop = hasHover && hasFinePointer;
+        
+        // Считаем устройство мобильным если:
+        // 1. User Agent содержит мобильные ключевые слова ИЛИ
+        // 2. (Экран маленький И есть поддержка touch) И НЕ настольный компьютер
+        const isMobile = isMobileUA || (isSmallScreen && hasTouch && !isDesktop);
+        
+        console.log(`[MobileControls] Device detection:`, {
+            userAgent: userAgent,
+            isMobileUA: isMobileUA,
+            isSmallScreen: isSmallScreen,
+            hasTouch: hasTouch,
+            hasHover: hasHover,
+            hasFinePointer: hasFinePointer,
+            isDesktop: isDesktop,
+            isMobile: isMobile,
+            screenSize: `${window.innerWidth}x${window.innerHeight}`
+        });
+        
+        return isMobile;
     }
     
     log(message) {

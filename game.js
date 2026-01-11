@@ -1440,6 +1440,15 @@ resizeCanvas();
 function startGame(gameMode = GameMode.SINGLE) {
     currentGameMode = gameMode;
     
+    // Устанавливаем соответствующее состояние игры СНАЧАЛА
+    if (gameMode === GameMode.SINGLE) {
+        currentGameState = GameState.PLAYING;
+    } else if (gameMode === GameMode.COOPERATIVE) {
+        currentGameState = GameState.COOPERATIVE;
+    } else if (gameMode === GameMode.VERSUS) {
+        currentGameState = GameState.VERSUS;
+    }
+    
     // Подключаем мобильные контролы для выбранного режима
     if (window.mobileControlsManager) {
         // Настраиваем контролы с задержкой, чтобы убедиться что DOM готов
@@ -1461,11 +1470,11 @@ function startGame(gameMode = GameMode.SINGLE) {
         console.warn('[Game] mobileControlsManager not found!');
     }
     
-    // Подключаем виртуальный джойстик
+    // Подключаем виртуальный джойстик ПОСЛЕ установки состояния
     if (window.virtualJoystick) {
         window.virtualJoystick.setGameMode(gameMode);
         window.virtualJoystick.setGameState(currentGameState);
-        console.log('[Game] Virtual joystick setup for mode:', gameMode);
+        console.log('[Game] Virtual joystick setup - Mode:', gameMode, 'State:', currentGameState);
     }
     
     // Диагностика мобильных контролов
@@ -1499,15 +1508,6 @@ function startGame(gameMode = GameMode.SINGLE) {
     enemies = [];
     powerUps = [];
     enemiesFrozenTimer = 0;
-    
-    // Устанавливаем соответствующее состояние игры
-    if (gameMode === GameMode.SINGLE) {
-        currentGameState = GameState.PLAYING;
-    } else if (gameMode === GameMode.COOPERATIVE) {
-        currentGameState = GameState.COOPERATIVE;
-    } else if (gameMode === GameMode.VERSUS) {
-        currentGameState = GameState.VERSUS;
-    }
     
     // Обновляем мобильные контролы
     updateMobileControls();

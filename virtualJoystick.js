@@ -7,6 +7,8 @@ class VirtualJoystick {
         this.isEnabled = this.isMobileDevice();
         this.dpadState = { up: false, down: false, left: false, right: false };
         this.fireState = false;
+        this.currentGameMode = null;
+        this.currentGameState = null;
         
         if (this.isEnabled) {
             this.init();
@@ -14,16 +16,59 @@ class VirtualJoystick {
     }
     
     isMobileDevice() {
-        return ('ontouchstart' in window) || (navigator.maxTouchPoints > 0);
+        // Проверяем User Agent на мобильные устройства
+        const userAgent = navigator.userAgent.toLowerCase();
+        const mobileKeywords = [
+            'android', 'iphone', 'ipad', 'ipod', 'blackberry', 
+            'windows phone', 'mobile', 'webos', 'opera mini'
+        ];
+        
+        const isMobileUA = mobileKeywords.some(keyword => userAgent.includes(keyword));
+        
+        // Проверяем размер экрана (мобильные устройства обычно имеют ширину <= 768px)
+        const isSmallScreen = window.innerWidth <= 768;
+        
+        // Проверяем наличие touch events
+        const hasTouch = ('ontouchstart' in window) || (navigator.maxTouchPoints > 0);
+        
+        // Исключаем настольные браузеры с поддержкой hover
+        const hasHover = window.matchMedia('(hover: hover)').matches;
+        const hasFinePointer = window.matchMedia('(pointer: fine)').matches;
+        const isDesktop = hasHover && hasFinePointer;
+        
+        // Считаем устройство мобильным если:
+        // 1. User Agent содержит мобильные ключевые слова ИЛИ
+        // 2. (Экран маленький И есть поддержка touch) И НЕ настольный компьютер
+        const isMobile = isMobileUA || (isSmallScreen && hasTouch && !isDesktop);
+        
+        console.log(`[VirtualJoystick] Device detection:`, {
+            userAgent: userAgent,
+            isMobileUA: isMobileUA,
+            isSmallScreen: isSmallScreen,
+            hasTouch: hasTouch,
+            hasHover: hasHover,
+            hasFinePointer: hasFinePointer,
+            isDesktop: isDesktop,
+            isMobile: isMobile,
+            screenSize: `${window.innerWidth}x${window.innerHeight}`
+        });
+        
+        return isMobile;
     }
     
     init() {
         console.log('[VirtualJoystick] Initializing...');
         this.createOverlay();
-        this.hideControls();
+        this.hideControls(); // Скрываем контролы по умолчанию
     }
     
     createOverlay() {
+        // Дополнительная проверка - не создаем overlay на ПК
+        if (!this.isEnabled) {
+            console.log('[VirtualJoystick] Overlay creation skipped - not a mobile device');
+            return;
+        }
+        
         // Remove existing
         const existing = document.getElementById('virtual-joystick-overlay');
         if (existing) existing.remove();
@@ -150,6 +195,12 @@ class VirtualJoystick {
     }
     
     showControls() {
+        // Дополнительная проверка - не показываем на ПК
+        if (!this.isEnabled) {
+            console.log('[VirtualJoystick] Controls not shown - not a mobile device');
+            return;
+        }
+        
         const overlay = document.getElementById('virtual-joystick-overlay');
         if (overlay) {
             overlay.style.display = 'block';
@@ -167,30 +218,41 @@ class VirtualJoystick {
     
     setGameMode(gameMode) {
         console.log(`[VirtualJoystick] Game mode: ${gameMode}`);
-        
-        const GameMode = window.GameMode || { SINGLE: 'SINGLE', COOPERATIVE: 'COOPERATIVE', VERSUS: 'VERSUS' };
-        
-        // Show virtual joystick only for single player mode
-        // For multiplayer, use the existing mobile controls system
-        if (gameMode === GameMode.SINGLE) {
-            this.showControls();
-        } else {
-            this.hideControls();
-        }
+        this.currentGameMode = gameMode;
+        this.updateVisibility();
     }
     
     setGameState(gameState) {
+        console.log(`[VirtualJoystick] Game state: ${gameState}`);
+        this.currentGameState = gameState;
+        this.updateVisibility();
+    }
+    
+    updateVisibility() {
         const GameState = window.GameState || { 
             PLAYING: 'PLAYING', COOPERATIVE: 'COOPERATIVE', VERSUS: 'VERSUS',
             MENU: 'MENU', MODE_SELECT: 'MODE_SELECT', GAME_OVER: 'GAME_OVER', PAUSED: 'PAUSED'
         };
         
-        // Show controls only during single player gameplay
-        if (gameState === GameState.PLAYING) {
+        const GameMode = window.GameMode || { 
+            SINGLE: 'SINGLE', COOPERATIVE: 'COOPERATIVE', VERSUS: 'VERSUS' 
+        };
+        
+        // Show virtual joystick ONLY when:
+        // 1. Game mode is SINGLE player
+        // 2. Game state is PLAYING (not in menu, mode select, etc.)
+        const shouldShow = (
+            this.currentGameMode === GameMode.SINGLE && 
+            this.currentGameState === GameState.PLAYING
+        );
+        
+        if (shouldShow) {
             this.showControls();
         } else {
             this.hideControls();
         }
+        
+        console.log(`[VirtualJoystick] Visibility update - Mode: ${this.currentGameMode}, State: ${this.currentGameState}, Show: ${shouldShow}`);
     }
 }
 
