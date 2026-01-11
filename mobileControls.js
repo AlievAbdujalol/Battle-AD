@@ -98,9 +98,7 @@ class MobileControls {
         // Add to game container
         const gameContainer = document.getElementById('game-container');
         gameContainer.appendChild(controlsContainer);
-        
-        // Add CSS styles
-        this.addStyles();
+    }
     }
     
     createGameControlButtons() {
@@ -226,25 +224,25 @@ class MobileControls {
                 flex-direction: column;
             }
             
-            .universal-game-controls {
+            .mobile-game-controls-enhanced {
                 position: absolute;
-                top: 20px;
-                right: 20px;
+                top: 10px;
+                right: 10px;
                 display: flex;
                 flex-direction: column;
-                gap: 10px;
-                z-index: 35;
+                gap: 8px;
+                z-index: 30;
                 pointer-events: auto;
             }
             
-            .universal-control-btn {
-                width: 50px;
-                height: 50px;
+            .game-control-btn-enhanced {
+                width: 40px;
+                height: 40px;
                 border: 2px solid rgba(255, 255, 255, 0.4);
                 border-radius: 50%;
                 background: rgba(0, 0, 0, 0.8);
                 color: white;
-                font-size: 20px;
+                font-size: 16px;
                 display: flex;
                 align-items: center;
                 justify-content: center;
@@ -254,30 +252,14 @@ class MobileControls {
                 -webkit-tap-highlight-color: transparent;
                 transition: all 0.2s ease;
                 cursor: pointer;
-                box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+                box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
             }
             
-            .universal-control-btn:hover {
-                background: rgba(255, 255, 255, 0.1);
-                border-color: rgba(255, 255, 255, 0.6);
-                transform: scale(1.05);
-            }
-            
-            .universal-control-btn:active {
+            .game-control-btn-enhanced:active {
                 background: rgba(255, 255, 255, 0.2);
                 border-color: rgba(255, 255, 255, 0.8);
                 transform: scale(0.95);
             }
-            
-            .mobile-game-controls-enhanced {
-                position: absolute;
-                top: 20px;
-                right: 20px;
-                display: flex;
-                flex-direction: column;
-                gap: 10px;
-                z-index: 30;
-                pointer-events: auto;
             }
             
             .game-control-btn-enhanced {
