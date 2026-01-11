@@ -9,6 +9,9 @@ body {
     background-color: #1a1a1a;
     font-family: 'Courier New', Courier, monospace;
     color: white;
+    /* Prevent zoom on mobile */
+    touch-action: manipulation;
+    -webkit-text-size-adjust: 100%;
 }
 
 #game-container {
@@ -20,6 +23,8 @@ body {
     justify-content: center;
     align-items: center;
     background: radial-gradient(circle, #2c2c2c 0%, #000000 100%);
+    /* Prevent scrolling on mobile */
+    overflow: hidden;
 }
 
 canvas {
@@ -29,14 +34,38 @@ canvas {
     border: 2px solid #444;
     transform: rotateX(15deg);
     image-rendering: pixelated;
-    max-width: 95vw;
-    max-height: 85vh;
+    /* Improved mobile scaling */
+    max-width: min(95vw, 95vh * (4/3));
+    max-height: min(85vh, 95vw * (3/4));
+    width: auto;
+    height: auto;
     transition: transform 0.5s ease;
+}
+
+/* Mobile-specific canvas adjustments */
+@media (max-width: 768px) {
+    canvas {
+        max-width: 98vw;
+        max-height: 70vh;
+        transform: rotateX(0deg); /* Remove 3D effect on mobile for better usability */
+        border: 1px solid #444;
+        box-shadow: 0 10px 40px rgba(0,0,0,0.6);
+    }
+}
+
+/* Landscape mobile adjustments */
+@media (orientation: landscape) and (max-height: 500px) {
+    canvas {
+        max-width: 85vw;
+        max-height: 90vh;
+        transform: rotateX(0deg);
+    }
 }
 
 #game-container:fullscreen canvas {
     max-height: 95vh;
-    transform: rotateX(0deg); /* Убираем наклон в реальном фуллскрине для удобства */
+    max-width: 95vw;
+    transform: rotateX(0deg); /* Remove tilt in fullscreen for usability */
 }
 
 #ui-overlay {
@@ -142,25 +171,29 @@ button:active {
 /* --- Mobile UI --- */
 #mobile-controls {
     position: absolute;
-    bottom: 30px;
+    bottom: 20px;
     left: 0;
     width: 100%;
     display: flex;
     justify-content: space-between;
-    padding: 0 40px;
+    padding: 0 30px;
     box-sizing: border-box;
     pointer-events: none;
     z-index: 20;
 }
 
-/* Показываем оригинальные мобильные контролы по умолчанию */
-#mobile-controls {
-    display: flex;
+/* Show mobile controls only on touch devices */
+@media (hover: none) and (pointer: coarse) {
+    #mobile-controls {
+        display: flex;
+    }
 }
 
-/* Скрываем оригинальные мобильные контролы когда активны улучшенные */
-.mobile-controls-enhanced:not([style*="display: none"]) ~ #mobile-controls {
-    display: none !important;
+/* Hide on desktop with mouse */
+@media (hover: hover) and (pointer: fine) {
+    #mobile-controls { 
+        display: none !important; 
+    }
 }
 
 .control-btn {
@@ -177,19 +210,15 @@ button:active {
     font-size: 24px;
     -webkit-user-select: none;
     user-select: none;
-    touch-action: manipulation; /* Более подходящий для кнопок */
+    touch-action: manipulation;
     -webkit-tap-highlight-color: transparent;
     transition: background 0.1s, transform 0.1s, border 0.1s;
     box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+    cursor: pointer;
 }
 
-.control-btn:active {
-    background: rgba(255, 255, 255, 0.3);
-    border-color: rgba(255, 255, 255, 0.5);
-    transform: scale(0.95);
-}
-
-.control-btn:active {
+.control-btn:active,
+.control-btn.active {
     background: rgba(255, 255, 255, 0.3);
     border-color: rgba(255, 255, 255, 0.5);
     transform: scale(0.95);
@@ -216,13 +245,84 @@ button:active {
     font-size: 32px;
 }
 
-#btn-shoot:active {
+#btn-shoot:active,
+#btn-shoot.active {
     background: rgba(255, 0, 0, 0.6);
 }
 
-/* Скрываем на десктопах с мышкой */
-@media (hover: hover) and (pointer: fine) {
-    #mobile-controls { display: none; }
+/* Mobile responsive adjustments */
+@media (max-width: 768px) {
+    #mobile-controls {
+        bottom: 15px;
+        padding: 0 20px;
+    }
+    
+    .control-btn {
+        width: 55px;
+        height: 55px;
+        font-size: 22px;
+    }
+    
+    .d-pad-horizontal {
+        gap: 35px;
+    }
+    
+    #btn-shoot {
+        width: 80px;
+        height: 80px;
+        font-size: 28px;
+    }
+}
+
+@media (max-width: 480px) {
+    #mobile-controls {
+        bottom: 10px;
+        padding: 0 15px;
+    }
+    
+    .control-btn {
+        width: 50px;
+        height: 50px;
+        font-size: 20px;
+    }
+    
+    .d-pad-horizontal {
+        gap: 30px;
+    }
+    
+    #btn-shoot {
+        width: 70px;
+        height: 70px;
+        font-size: 24px;
+    }
+}
+
+/* Landscape orientation adjustments */
+@media (orientation: landscape) and (max-height: 500px) {
+    #mobile-controls {
+        bottom: 5px;
+        padding: 0 10px;
+    }
+    
+    .control-btn {
+        width: 45px;
+        height: 45px;
+        font-size: 18px;
+    }
+    
+    .d-pad {
+        gap: 3px;
+    }
+    
+    .d-pad-horizontal {
+        gap: 25px;
+    }
+    
+    #btn-shoot {
+        width: 60px;
+        height: 60px;
+        font-size: 20px;
+    }
 }
 /* --- Mode Selection Screen --- */
 .mode-buttons {
@@ -282,12 +382,12 @@ button:active {
 /* --- Multiplayer Mobile Controls --- */
 .mobile-control-set {
     position: absolute;
-    bottom: 30px;
+    bottom: 20px;
     left: 0;
     width: 100%;
     display: flex;
     justify-content: space-between;
-    padding: 0 40px;
+    padding: 0 30px;
     box-sizing: border-box;
     pointer-events: none;
 }
@@ -296,7 +396,7 @@ button:active {
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 10px;
+    gap: 8px;
     pointer-events: auto;
 }
 
@@ -311,11 +411,11 @@ button:active {
 .player-label {
     background: rgba(255, 255, 255, 0.2);
     color: white;
-    padding: 5px 10px;
-    border-radius: 15px;
-    font-size: 12px;
+    padding: 4px 8px;
+    border-radius: 12px;
+    font-size: 11px;
     font-weight: bold;
-    margin-bottom: 5px;
+    margin-bottom: 3px;
 }
 
 .player1-controls .player-label {
@@ -350,8 +450,102 @@ button:active {
 }
 
 .control-btn.small#btn-p1-shoot:active,
-.control-btn.small#btn-p2-shoot:active {
+.control-btn.small#btn-p1-shoot.active,
+.control-btn.small#btn-p2-shoot:active,
+.control-btn.small#btn-p2-shoot.active {
     background: rgba(255, 0, 0, 0.6);
+}
+
+/* Mobile responsive adjustments for multiplayer */
+@media (max-width: 768px) {
+    .mobile-control-set {
+        bottom: 15px;
+        padding: 0 20px;
+    }
+    
+    .player-controls {
+        gap: 5px;
+    }
+    
+    .control-btn.small {
+        width: 40px;
+        height: 40px;
+        font-size: 16px;
+    }
+    
+    .control-btn.small#btn-p1-shoot,
+    .control-btn.small#btn-p2-shoot {
+        width: 55px;
+        height: 55px;
+        font-size: 22px;
+    }
+    
+    .d-pad.small .d-pad-horizontal {
+        gap: 20px;
+    }
+}
+
+@media (max-width: 480px) {
+    .mobile-control-set {
+        bottom: 10px;
+        padding: 0 15px;
+    }
+    
+    .control-btn.small {
+        width: 35px;
+        height: 35px;
+        font-size: 14px;
+    }
+    
+    .control-btn.small#btn-p1-shoot,
+    .control-btn.small#btn-p2-shoot {
+        width: 50px;
+        height: 50px;
+        font-size: 20px;
+    }
+    
+    .d-pad.small .d-pad-horizontal {
+        gap: 18px;
+    }
+    
+    .player-label {
+        font-size: 10px;
+        padding: 3px 6px;
+    }
+}
+
+/* Landscape orientation adjustments for multiplayer */
+@media (orientation: landscape) and (max-height: 500px) {
+    .mobile-control-set {
+        bottom: 5px;
+        padding: 0 10px;
+    }
+    
+    .control-btn.small {
+        width: 32px;
+        height: 32px;
+        font-size: 12px;
+    }
+    
+    .control-btn.small#btn-p1-shoot,
+    .control-btn.small#btn-p2-shoot {
+        width: 45px;
+        height: 45px;
+        font-size: 18px;
+    }
+    
+    .d-pad.small {
+        gap: 2px;
+    }
+    
+    .d-pad.small .d-pad-horizontal {
+        gap: 15px;
+    }
+    
+    .player-label {
+        font-size: 9px;
+        padding: 2px 5px;
+    }
 }
 
 /* --- Multiplayer HUD Styles --- */

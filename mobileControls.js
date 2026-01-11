@@ -1,54 +1,36 @@
 /**
- * Enhanced Mobile Touch Controls for Battle City
- * Supports LOCAL CO-OP with dual-stick shooter style controls
+ * Clean Mobile Touch Controls for Battle City
+ * Handles both single player and multiplayer modes without duplication
  */
 
-class MobileControls {
+class MobileControlsManager {
     constructor() {
         this.isEnabled = this.isMobileDevice();
-        this.touchZones = {
-            player1: { top: 0.5, bottom: 1.0 }, // Bottom half
-            player2: { top: 0.0, bottom: 0.5 }  // Top half
+        this.initialized = false;
+        this.activeControls = null;
+        this.touchHandlers = new Map();
+        
+        // Control mappings
+        this.singlePlayerMapping = {
+            'btn-up': 'ArrowUp',
+            'btn-down': 'ArrowDown', 
+            'btn-left': 'ArrowLeft',
+            'btn-right': 'ArrowRight',
+            'btn-shoot': 'Space'
         };
         
-        // Touch tracking for each player
-        this.activeTouches = {
-            player1: { joystick: null, fire: null },
-            player2: { joystick: null, fire: null }
+        this.multiplayerMapping = {
+            'btn-p1-up': 'KeyW',
+            'btn-p1-down': 'KeyS',
+            'btn-p1-left': 'KeyA', 
+            'btn-p1-right': 'KeyD',
+            'btn-p1-shoot': 'Space',
+            'btn-p2-up': 'ArrowUp',
+            'btn-p2-down': 'ArrowDown',
+            'btn-p2-left': 'ArrowLeft',
+            'btn-p2-right': 'ArrowRight',
+            'btn-p2-shoot': 'Enter'
         };
-        
-        // Virtual joystick states
-        this.joysticks = {
-            player1: { active: false, x: 0, y: 0, centerX: 0, centerY: 0 },
-            player2: { active: false, x: 0, y: 0, centerX: 0, centerY: 0 }
-        };
-        
-        // Fire button states
-        this.fireButtons = {
-            player1: { active: false, x: 0, y: 0 },
-            player2: { active: false, x: 0, y: 0 }
-        };
-        
-        // Control mappings to game keys
-        this.keyMappings = {
-            player1: {
-                up: 'KeyW',
-                down: 'KeyS',
-                left: 'KeyA', 
-                right: 'KeyD',
-                fire: 'Space'
-            },
-            player2: {
-                up: 'ArrowUp',
-                down: 'ArrowDown',
-                left: 'ArrowLeft',
-                right: 'ArrowRight', 
-                fire: 'Enter'
-            }
-        };
-        
-        this.deadZone = 0.2; // Joystick dead zone
-        this.maxDistance = 50; // Maximum joystick distance
         
         this.init();
     }
@@ -65,508 +47,295 @@ class MobileControls {
             return;
         }
         
-        console.log('Initializing enhanced mobile controls');
-        this.createControlElements();
-        this.setupEventListeners();
-        
-        // Изначально скрываем улучшенные контролы
-        this.setEnabled(false);
+        console.log('Initializing mobile controls manager');
+        this.setupGameControlButtons();
+        this.initialized = true;
     }
     
-    createControlElements() {
-        // Create enhanced mobile controls only for mobile devices
-        if (!this.isEnabled) return;
-        
-        // НЕ удаляем существующие мобильные контролы - они нужны для одиночной игры
-        
-        // Create new mobile controls container
-        const controlsContainer = document.createElement('div');
-        controlsContainer.id = 'mobile-controls-enhanced';
-        controlsContainer.className = 'mobile-controls-enhanced';
-        
-        // Create game control buttons
-        const gameControlsDiv = this.createGameControls();
-        controlsContainer.appendChild(gameControlsDiv);
-        
-        // Create player zones
-        const player1Zone = this.createPlayerZone('player1', 'P1', 'bottom');
-        const player2Zone = this.createPlayerZone('player2', 'P2', 'top');
-        
-        controlsContainer.appendChild(player1Zone);
-        controlsContainer.appendChild(player2Zone);
-        
-        // Add to game container
-        const gameContainer = document.getElementById('game-container');
-        gameContainer.appendChild(controlsContainer);
-    }
-    }
-    
-    createGameControlButtons() {
-        // Remove existing game control buttons
-        const existingGameControls = document.getElementById('universal-game-controls');
-        if (existingGameControls) {
-            existingGameControls.remove();
+    setupGameControlButtons() {
+        // Create universal game control buttons (pause/exit)
+        const existingControls = document.getElementById('universal-game-controls');
+        if (existingControls) {
+            existingControls.remove();
         }
         
-        // Create universal game control buttons (visible on all devices)
         const gameControlsDiv = document.createElement('div');
         gameControlsDiv.id = 'universal-game-controls';
         gameControlsDiv.className = 'universal-game-controls';
+        gameControlsDiv.style.cssText = `
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            display: none;
+            flex-direction: column;
+            gap: 10px;
+            z-index: 30;
+            pointer-events: auto;
+        `;
         
         // Pause button
         const pauseBtn = document.createElement('div');
         pauseBtn.className = 'universal-control-btn';
         pauseBtn.id = 'universal-pause-btn';
         pauseBtn.innerHTML = '⏸️';
-        pauseBtn.title = 'Pause (Backspace)';
+        pauseBtn.title = 'Pause';
+        pauseBtn.style.cssText = `
+            width: 50px;
+            height: 50px;
+            border: 2px solid rgba(255, 255, 255, 0.4);
+            border-radius: 50%;
+            background: rgba(0, 0, 0, 0.8);
+            color: white;
+            font-size: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            touch-action: none;
+            user-select: none;
+            -webkit-user-select: none;
+            -webkit-tap-highlight-color: transparent;
+            transition: all 0.2s ease;
+            cursor: pointer;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+        `;
         
         // Exit button
         const exitBtn = document.createElement('div');
         exitBtn.className = 'universal-control-btn';
         exitBtn.id = 'universal-exit-btn';
         exitBtn.innerHTML = '🚪';
-        exitBtn.title = 'Exit (ESC)';
+        exitBtn.title = 'Exit';
+        exitBtn.style.cssText = pauseBtn.style.cssText;
         
         gameControlsDiv.appendChild(pauseBtn);
         gameControlsDiv.appendChild(exitBtn);
         
-        // Add to game container
-        const gameContainer = document.getElementById('game-container');
-        gameContainer.appendChild(gameControlsDiv);
+        document.getElementById('game-container').appendChild(gameControlsDiv);
         
         // Add event listeners
-        this.setupGameControlListeners();
+        this.addButtonListeners(pauseBtn, () => {
+            if (window.handlePauseKey) window.handlePauseKey();
+        });
+        
+        this.addButtonListeners(exitBtn, () => {
+            if (window.handleEscapeKey) window.handleEscapeKey();
+        });
     }
     
-    setupGameControlListeners() {
-        const pauseBtn = document.getElementById('universal-pause-btn');
-        const exitBtn = document.getElementById('universal-exit-btn');
+    addButtonListeners(element, callback) {
+        const touchStart = (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            element.style.background = 'rgba(255, 255, 255, 0.2)';
+            element.style.borderColor = 'rgba(255, 255, 255, 0.8)';
+            element.style.transform = 'scale(0.95)';
+            callback();
+        };
         
-        if (pauseBtn) {
-            pauseBtn.addEventListener('touchstart', (e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                if (window.handlePauseKey) window.handlePauseKey();
-            });
-            pauseBtn.addEventListener('click', (e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                if (window.handlePauseKey) window.handlePauseKey();
-            });
-        }
+        const touchEnd = (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            element.style.background = 'rgba(0, 0, 0, 0.8)';
+            element.style.borderColor = 'rgba(255, 255, 255, 0.4)';
+            element.style.transform = 'scale(1)';
+        };
         
-        if (exitBtn) {
-            exitBtn.addEventListener('touchstart', (e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                if (window.handleEscapeKey) window.handleEscapeKey();
-            });
-            exitBtn.addEventListener('click', (e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                if (window.handleEscapeKey) window.handleEscapeKey();
-            });
-        }
+        element.addEventListener('touchstart', touchStart, { passive: false });
+        element.addEventListener('touchend', touchEnd, { passive: false });
+        element.addEventListener('touchcancel', touchEnd, { passive: false });
+        element.addEventListener('click', callback);
     }
     
-    createPlayerZone(playerId, label, position) {
-        const zone = document.createElement('div');
-        zone.className = `player-zone player-zone-${position}`;
-        zone.id = `${playerId}-zone`;
-        
-        // Player label
-        const playerLabel = document.createElement('div');
-        playerLabel.className = 'player-label';
-        playerLabel.textContent = label;
-        playerLabel.style.color = playerId === 'player1' ? '#4CAF50' : '#2196F3';
-        
-        // Joystick area (left side)
-        const joystickArea = document.createElement('div');
-        joystickArea.className = 'joystick-area';
-        joystickArea.id = `${playerId}-joystick-area`;
-        
-        const joystick = document.createElement('div');
-        joystick.className = 'virtual-joystick';
-        joystick.id = `${playerId}-joystick`;
-        
-        const joystickKnob = document.createElement('div');
-        joystickKnob.className = 'joystick-knob';
-        joystick.appendChild(joystickKnob);
-        
-        joystickArea.appendChild(joystick);
-        
-        // Fire button (right side)
-        const fireButton = document.createElement('div');
-        fireButton.className = 'fire-button';
-        fireButton.id = `${playerId}-fire`;
-        fireButton.innerHTML = '🔥';
-        
-        // Assemble zone
-        zone.appendChild(playerLabel);
-        zone.appendChild(joystickArea);
-        zone.appendChild(fireButton);
-        
-        return zone;
-    }
-    
-    setupEventListeners() {
-        // Setup enhanced mobile controls only for mobile devices
+    setupControlsForMode(gameMode) {
         if (!this.isEnabled) return;
         
-        const controlsContainer = document.getElementById('mobile-controls-enhanced');
-        if (!controlsContainer) return;
+        this.cleanup();
         
-        // Touch events on the entire controls container
-        controlsContainer.addEventListener('touchstart', this.handleTouchStart.bind(this), { passive: false });
-        controlsContainer.addEventListener('touchmove', this.handleTouchMove.bind(this), { passive: false });
-        controlsContainer.addEventListener('touchend', this.handleTouchEnd.bind(this), { passive: false });
-        controlsContainer.addEventListener('touchcancel', this.handleTouchEnd.bind(this), { passive: false });
-        
-        // Prevent context menu on long press
-        controlsContainer.addEventListener('contextmenu', (e) => e.preventDefault());
-    }
-    
-    handleTouchStart(event) {
-        event.preventDefault();
-        
-        for (let touch of event.changedTouches) {
-            const player = this.getTouchPlayer(touch);
-            if (!player) continue;
-            
-            const touchType = this.getTouchType(touch, player);
-            if (!touchType) continue;
-            
-            // Check if this touch type is already bound to another touch
-            if (this.activeTouches[player][touchType] !== null) continue;
-            
-            // Bind touch to player and type
-            this.activeTouches[player][touchType] = touch.identifier;
-            
-            if (touchType === 'joystick') {
-                this.startJoystick(player, touch);
-            } else if (touchType === 'fire') {
-                this.startFire(player, touch);
-            }
-        }
-    }
-    
-    handleTouchMove(event) {
-        event.preventDefault();
-        
-        for (let touch of event.changedTouches) {
-            const player = this.getPlayerByTouchId(touch.identifier);
-            if (!player) continue;
-            
-            const touchType = this.getTouchTypeByTouchId(touch.identifier, player);
-            if (touchType === 'joystick') {
-                this.updateJoystick(player, touch);
-            }
-        }
-    }
-    
-    handleTouchEnd(event) {
-        event.preventDefault();
-        
-        for (let touch of event.changedTouches) {
-            const player = this.getPlayerByTouchId(touch.identifier);
-            if (!player) continue;
-            
-            const touchType = this.getTouchTypeByTouchId(touch.identifier, player);
-            
-            if (touchType === 'joystick') {
-                this.endJoystick(player);
-            } else if (touchType === 'fire') {
-                this.endFire(player);
-            }
-            
-            // Clear touch binding
-            this.activeTouches[player][touchType] = null;
-        }
-    }
-    
-    getTouchPlayer(touch) {
-        const rect = document.getElementById('mobile-controls-enhanced').getBoundingClientRect();
-        const relativeY = (touch.clientY - rect.top) / rect.height;
-        
-        // Player 1: нижняя половина (0.5 - 1.0)
-        // Player 2: верхняя половина (0.0 - 0.5)
-        if (relativeY >= 0.5) {
-            return 'player1';
-        } else if (relativeY < 0.5) {
-            return 'player2';
-        }
-        
-        return null;
-    }
-    
-    getTouchType(touch, player) {
-        const rect = document.getElementById('mobile-controls-enhanced').getBoundingClientRect();
-        const relativeX = (touch.clientX - rect.left) / rect.width;
-        
-        // Left side is joystick, right side is fire button
-        if (relativeX < 0.5) {
-            return 'joystick';
-        } else {
-            return 'fire';
-        }
-    }
-    
-    getPlayerByTouchId(touchId) {
-        for (let player in this.activeTouches) {
-            for (let touchType in this.activeTouches[player]) {
-                if (this.activeTouches[player][touchType] === touchId) {
-                    return player;
-                }
-            }
-        }
-        return null;
-    }
-    
-    getTouchTypeByTouchId(touchId, player) {
-        for (let touchType in this.activeTouches[player]) {
-            if (this.activeTouches[player][touchType] === touchId) {
-                return touchType;
-            }
-        }
-        return null;
-    }
-    
-    startJoystick(player, touch) {
-        const joystickElement = document.getElementById(`${player}-joystick`);
-        const rect = joystickElement.getBoundingClientRect();
-        
-        this.joysticks[player].active = true;
-        this.joysticks[player].centerX = rect.left + rect.width / 2;
-        this.joysticks[player].centerY = rect.top + rect.height / 2;
-        
-        joystickElement.classList.add('active');
-        joystickElement.querySelector('.joystick-knob').classList.add('active');
-        
-        this.updateJoystick(player, touch);
-        
-        // Haptic feedback if available
-        if (navigator.vibrate) {
-            navigator.vibrate(50);
-        }
-    }
-    
-    updateJoystick(player, touch) {
-        if (!this.joysticks[player].active) return;
-        
-        const centerX = this.joysticks[player].centerX;
-        const centerY = this.joysticks[player].centerY;
-        
-        // Calculate distance from center
-        const deltaX = touch.clientX - centerX;
-        const deltaY = touch.clientY - centerY;
-        const distance = Math.sqrt(deltaX * deltaX + deltaY * deltaY);
-        
-        // Limit to max distance
-        const limitedDistance = Math.min(distance, this.maxDistance);
-        const angle = Math.atan2(deltaY, deltaX);
-        
-        // Calculate final position
-        const finalX = Math.cos(angle) * limitedDistance;
-        const finalY = Math.sin(angle) * limitedDistance;
-        
-        // Update joystick state
-        this.joysticks[player].x = finalX / this.maxDistance;
-        this.joysticks[player].y = finalY / this.maxDistance;
-        
-        // Update visual position
-        const knob = document.getElementById(`${player}-joystick`).querySelector('.joystick-knob');
-        knob.style.transform = `translate(calc(-50% + ${finalX}px), calc(-50% + ${finalY}px))`;
-        
-        // Update game keys based on joystick position
-        this.updateMovementKeys(player);
-    }
-    
-    updateMovementKeys(player) {
-        const joystick = this.joysticks[player];
-        const keys = this.keyMappings[player];
-        
-        // Clear all movement keys first
-        if (window.keys) {
-            window.keys[keys.up] = false;
-            window.keys[keys.down] = false;
-            window.keys[keys.left] = false;
-            window.keys[keys.right] = false;
-        }
-        
-        // Apply dead zone
-        if (Math.abs(joystick.x) < this.deadZone && Math.abs(joystick.y) < this.deadZone) {
-            return;
-        }
-        
-        // Set keys based on joystick position
-        if (window.keys) {
-            if (joystick.y < -this.deadZone) window.keys[keys.up] = true;
-            if (joystick.y > this.deadZone) window.keys[keys.down] = true;
-            if (joystick.x < -this.deadZone) window.keys[keys.left] = true;
-            if (joystick.x > this.deadZone) window.keys[keys.right] = true;
-        }
-    }
-    
-    endJoystick(player) {
-        this.joysticks[player].active = false;
-        this.joysticks[player].x = 0;
-        this.joysticks[player].y = 0;
-        
-        const joystickElement = document.getElementById(`${player}-joystick`);
-        joystickElement.classList.remove('active');
-        
-        const knob = joystickElement.querySelector('.joystick-knob');
-        knob.classList.remove('active');
-        knob.style.transform = 'translate(-50%, -50%)';
-        
-        // Clear movement keys
-        const keys = this.keyMappings[player];
-        if (window.keys) {
-            window.keys[keys.up] = false;
-            window.keys[keys.down] = false;
-            window.keys[keys.left] = false;
-            window.keys[keys.right] = false;
-        }
-    }
-    
-    startFire(player, touch) {
-        const fireButton = document.getElementById(`${player}-fire`);
-        fireButton.classList.add('active');
-        
-        this.fireButtons[player].active = true;
-        
-        // Set fire key
-        const keys = this.keyMappings[player];
-        if (window.keys) {
-            window.keys[keys.fire] = true;
-        }
-        
-        // Haptic feedback if available
-        if (navigator.vibrate) {
-            navigator.vibrate(100);
-        }
-    }
-    
-    endFire(player) {
-        const fireButton = document.getElementById(`${player}-fire`);
-        fireButton.classList.remove('active');
-        
-        this.fireButtons[player].active = false;
-        
-        // Clear fire key
-        const keys = this.keyMappings[player];
-        if (window.keys) {
-            window.keys[keys.fire] = false;
-        }
-    }
-    
-    updateVisibility() {
-        // Update enhanced mobile controls visibility (only for mobile devices)
-        const controlsContainer = document.getElementById('mobile-controls-enhanced');
-        if (controlsContainer) {
-            const GameMode = window.GameMode || { COOPERATIVE: 'COOPERATIVE', VERSUS: 'VERSUS' };
-            const currentMode = this.currentGameMode || window.currentGameMode;
-            
-            if (this.isEnabled && (currentMode === GameMode.COOPERATIVE || currentMode === GameMode.VERSUS)) {
-                controlsContainer.style.display = 'flex';
-            } else {
-                controlsContainer.style.display = 'none';
-            }
-        }
-        
-        // Update universal game control buttons visibility (for all devices)
-        this.updateGameControlsVisibility();
-    }
-    
-    updateGameControlsVisibility() {
-        const gameControls = document.getElementById('universal-game-controls');
-        if (!gameControls) return;
-        
-        // Show game control buttons during gameplay on all devices
-        const GameState = window.GameState || { PLAYING: 'PLAYING', COOPERATIVE: 'COOPERATIVE', VERSUS: 'VERSUS', PAUSED: 'PAUSED' };
-        const currentState = window.currentGameState;
-        
-        if (currentState === GameState.PLAYING || 
-            currentState === GameState.COOPERATIVE || 
-            currentState === GameState.VERSUS ||
-            currentState === GameState.PAUSED) {
-            gameControls.style.display = 'flex';
-        } else {
-            gameControls.style.display = 'none';
-        }
-    }
-    
-    // Public method to update visibility when game mode changes
-    setGameMode(gameMode) {
-        // Store the current game mode for reference
-        this.currentGameMode = gameMode;
-        this.updateVisibility();
-        
-        // Enable/disable enhanced mobile controls based on game mode
         const GameMode = window.GameMode || { SINGLE: 'SINGLE', COOPERATIVE: 'COOPERATIVE', VERSUS: 'VERSUS' };
-        const shouldEnable = (gameMode === GameMode.COOPERATIVE || gameMode === GameMode.VERSUS);
-        this.setEnabled(shouldEnable);
-    }
-    
-    // Public method to update game controls visibility when game state changes
-    setGameState(gameState) {
-        this.updateGameControlsVisibility();
-    }
-    
-    // Public method to enable/disable controls
-    setEnabled(enabled) {
-        const controlsContainer = document.getElementById('mobile-controls-enhanced');
-        if (controlsContainer) {
-            if (enabled) {
-                controlsContainer.style.display = 'flex';
-                controlsContainer.style.pointerEvents = 'auto';
-                controlsContainer.style.opacity = '1';
-            } else {
-                controlsContainer.style.display = 'none';
-                controlsContainer.style.pointerEvents = 'none';
-                controlsContainer.style.opacity = '0';
-            }
-        }
-    }
-    
-    // Cleanup method
-    destroy() {
-        const controlsContainer = document.getElementById('mobile-controls-enhanced');
-        if (controlsContainer) {
-            controlsContainer.remove();
+        
+        if (gameMode === GameMode.SINGLE) {
+            this.setupSinglePlayerControls();
+        } else {
+            this.setupMultiplayerControls();
         }
         
-        // Clear all active touches and keys
-        for (let player in this.activeTouches) {
-            this.endJoystick(player);
-            this.endFire(player);
+        this.activeControls = gameMode;
+    }
+    
+    setupSinglePlayerControls() {
+        const mapping = this.singlePlayerMapping;
+        
+        Object.keys(mapping).forEach(buttonId => {
+            const button = document.getElementById(buttonId);
+            if (button) {
+                const keyCode = mapping[buttonId];
+                
+                const startHandler = (e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    if (window.keys) window.keys[keyCode] = true;
+                    button.classList.add('active');
+                };
+                
+                const endHandler = (e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    if (window.keys) window.keys[keyCode] = false;
+                    button.classList.remove('active');
+                };
+                
+                // Store handlers for cleanup
+                this.touchHandlers.set(buttonId, { startHandler, endHandler });
+                
+                // Add event listeners
+                button.addEventListener('touchstart', startHandler, { passive: false });
+                button.addEventListener('touchend', endHandler, { passive: false });
+                button.addEventListener('touchcancel', endHandler, { passive: false });
+                button.addEventListener('mousedown', startHandler);
+                button.addEventListener('mouseup', endHandler);
+                button.addEventListener('mouseleave', endHandler);
+            }
+        });
+    }
+    
+    setupMultiplayerControls() {
+        const mapping = this.multiplayerMapping;
+        
+        Object.keys(mapping).forEach(buttonId => {
+            const button = document.getElementById(buttonId);
+            if (button) {
+                const keyCode = mapping[buttonId];
+                
+                const startHandler = (e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    if (window.keys) window.keys[keyCode] = true;
+                    button.classList.add('active');
+                };
+                
+                const endHandler = (e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    if (window.keys) window.keys[keyCode] = false;
+                    button.classList.remove('active');
+                };
+                
+                // Store handlers for cleanup
+                this.touchHandlers.set(buttonId, { startHandler, endHandler });
+                
+                // Add event listeners
+                button.addEventListener('touchstart', startHandler, { passive: false });
+                button.addEventListener('touchend', endHandler, { passive: false });
+                button.addEventListener('touchcancel', endHandler, { passive: false });
+                button.addEventListener('mousedown', startHandler);
+                button.addEventListener('mouseup', endHandler);
+                button.addEventListener('mouseleave', endHandler);
+            }
+        });
+    }
+    
+    cleanup() {
+        // Remove all existing event listeners
+        this.touchHandlers.forEach((handlers, buttonId) => {
+            const button = document.getElementById(buttonId);
+            if (button) {
+                button.removeEventListener('touchstart', handlers.startHandler);
+                button.removeEventListener('touchend', handlers.endHandler);
+                button.removeEventListener('touchcancel', handlers.endHandler);
+                button.removeEventListener('mousedown', handlers.startHandler);
+                button.removeEventListener('mouseup', handlers.endHandler);
+                button.removeEventListener('mouseleave', handlers.endHandler);
+                button.classList.remove('active');
+            }
+        });
+        
+        this.touchHandlers.clear();
+        
+        // Clear any active keys
+        if (window.keys) {
+            Object.values(this.singlePlayerMapping).forEach(key => {
+                window.keys[key] = false;
+            });
+            Object.values(this.multiplayerMapping).forEach(key => {
+                window.keys[key] = false;
+            });
+        }
+    }
+    
+    updateVisibility(gameState, gameMode) {
+        const GameState = window.GameState || { 
+            PLAYING: 'PLAYING', 
+            COOPERATIVE: 'COOPERATIVE', 
+            VERSUS: 'VERSUS', 
+            PAUSED: 'PAUSED',
+            MENU: 'MENU',
+            MODE_SELECT: 'MODE_SELECT',
+            GAME_OVER: 'GAME_OVER'
+        };
+        
+        const GameMode = window.GameMode || { SINGLE: 'SINGLE', COOPERATIVE: 'COOPERATIVE', VERSUS: 'VERSUS' };
+        
+        // Update game control buttons visibility
+        const gameControls = document.getElementById('universal-game-controls');
+        if (gameControls) {
+            if (gameState === GameState.PLAYING || 
+                gameState === GameState.COOPERATIVE || 
+                gameState === GameState.VERSUS ||
+                gameState === GameState.PAUSED) {
+                gameControls.style.display = 'flex';
+            } else {
+                gameControls.style.display = 'none';
+            }
+        }
+        
+        // Update mobile controls visibility
+        const singleControls = document.getElementById('single-player-controls');
+        const multiControls = document.getElementById('multiplayer-controls');
+        
+        if (gameState === GameState.PLAYING || 
+            gameState === GameState.COOPERATIVE || 
+            gameState === GameState.VERSUS) {
+            
+            if (gameMode === GameMode.SINGLE) {
+                if (singleControls) singleControls.classList.remove('hidden');
+                if (multiControls) multiControls.classList.add('hidden');
+            } else {
+                if (singleControls) singleControls.classList.add('hidden');
+                if (multiControls) multiControls.classList.remove('hidden');
+            }
+        } else {
+            if (singleControls) singleControls.classList.add('hidden');
+            if (multiControls) multiControls.classList.add('hidden');
+        }
+    }
+    
+    setGameMode(gameMode) {
+        this.setupControlsForMode(gameMode);
+    }
+    
+    setGameState(gameState, gameMode) {
+        this.updateVisibility(gameState, gameMode);
+    }
+    
+    destroy() {
+        this.cleanup();
+        
+        const gameControls = document.getElementById('universal-game-controls');
+        if (gameControls) {
+            gameControls.remove();
         }
     }
 }
 
 // Global instance
-let mobileControls = null;
+let mobileControlsManager = null;
 
-// Initialize mobile controls when DOM is ready
+// Initialize when DOM is ready
 document.addEventListener('DOMContentLoaded', function() {
-    // Wait a bit for the game to initialize
     setTimeout(() => {
-        // Initialize mobile controls
-        mobileControls = new MobileControls();
+        mobileControlsManager = new MobileControlsManager();
+        window.mobileControlsManager = mobileControlsManager;
         
-        // Make it globally accessible
-        window.mobileControls = mobileControls;
-        
-        // Hook into game mode changes
-        const originalStartGame = window.startGame;
-        if (originalStartGame) {
-            window.startGame = function(gameMode) {
-                const result = originalStartGame.call(this, gameMode);
-                if (mobileControls) {
-                    mobileControls.setGameMode(gameMode);
-                }
-                return result;
-            };
-        }
+        console.log('Mobile controls manager initialized');
     }, 100);
 });

@@ -1077,93 +1077,6 @@ function returnToModeSelect() {
     // Обновляем мобильные контролы
     updateMobileControls();
 }
-const mobileBtns = { 'btn-up': 'ArrowUp', 'btn-down': 'ArrowDown', 'btn-left': 'ArrowLeft', 'btn-right': 'ArrowRight', 'btn-shoot': 'Space' };
-
-// Мобильные контролы для мультиплеера
-const multiplayerMobileBtns = {
-    // Player 1 controls
-    'btn-p1-up': 'KeyW',
-    'btn-p1-down': 'KeyS', 
-    'btn-p1-left': 'KeyA',
-    'btn-p1-right': 'KeyD',
-    'btn-p1-shoot': 'Space',
-    // Player 2 controls
-    'btn-p2-up': 'ArrowUp',
-    'btn-p2-down': 'ArrowDown',
-    'btn-p2-left': 'ArrowLeft', 
-    'btn-p2-right': 'ArrowRight',
-    'btn-p2-shoot': 'Enter'
-};
-
-// Инициализация мобильных контролов после загрузки DOM
-document.addEventListener('DOMContentLoaded', function() {
-    // Мобильные контролы для одиночной игры
-    Object.keys(mobileBtns).forEach(id => {
-        const btn = document.getElementById(id);
-        if (btn) {
-            const start = (e) => { e.preventDefault(); keys[mobileBtns[id]] = true; };
-            const end = (e) => { e.preventDefault(); keys[mobileBtns[id]] = false; };
-            btn.addEventListener('touchstart', start); 
-            btn.addEventListener('touchend', end);
-            btn.addEventListener('mousedown', () => keys[mobileBtns[id]] = true);
-            btn.addEventListener('mouseup', () => keys[mobileBtns[id]] = false);
-            btn.addEventListener('mouseleave', () => keys[mobileBtns[id]] = false);
-        }
-    });
-
-    Object.keys(multiplayerMobileBtns).forEach(id => {
-        const btn = document.getElementById(id);
-        if (btn) {
-            const start = (e) => { e.preventDefault(); keys[multiplayerMobileBtns[id]] = true; };
-            const end = (e) => { e.preventDefault(); keys[multiplayerMobileBtns[id]] = false; };
-            btn.addEventListener('touchstart', start);
-            btn.addEventListener('touchend', end);
-            btn.addEventListener('mousedown', () => keys[multiplayerMobileBtns[id]] = true);
-            btn.addEventListener('mouseup', () => keys[multiplayerMobileBtns[id]] = false);
-            btn.addEventListener('mouseleave', () => keys[multiplayerMobileBtns[id]] = false);
-        }
-    });
-});
-
-// Функция для переключения мобильных контролов
-function updateMobileControls() {
-    const singleControls = document.getElementById('single-player-controls');
-    const multiControls = document.getElementById('multiplayer-controls');
-    const gameControls = document.getElementById('mobile-game-controls');
-    
-    if (currentGameMode === GameMode.SINGLE) {
-        // Одиночная игра - показываем оригинальные контролы
-        if (singleControls) singleControls.classList.remove('hidden');
-        if (multiControls) multiControls.classList.add('hidden');
-        
-        // Отключаем улучшенные мобильные контролы для одиночной игры
-        if (window.mobileControls) {
-            window.mobileControls.setEnabled(false);
-        }
-    } else {
-        // Мультиплеер - скрываем оригинальные контролы и показываем улучшенные
-        if (singleControls) singleControls.classList.add('hidden');
-        if (multiControls) multiControls.classList.add('hidden'); // Скрываем старые мультиплеер контролы
-        
-        // Включаем улучшенные мобильные контролы для мультиплеера
-        if (window.mobileControls) {
-            window.mobileControls.setEnabled(true);
-            window.mobileControls.setGameMode(currentGameMode);
-        }
-    }
-    
-    // Показываем кнопки управления игрой только во время игры (оригинальные мобильные кнопки)
-    if (gameControls) {
-        if (currentGameState === GameState.PLAYING || 
-            currentGameState === GameState.COOPERATIVE || 
-            currentGameState === GameState.VERSUS ||
-            currentGameState === GameState.PAUSED) {
-            gameControls.classList.remove('hidden');
-        } else {
-            gameControls.classList.add('hidden');
-        }
-    }
-}
 
 // Инициализация обработчиков событий после загрузки DOM
 document.addEventListener('DOMContentLoaded', function() {
@@ -1235,31 +1148,88 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 
     // Мобильные кнопки управления игрой
-    document.getElementById('mobile-pause-btn').addEventListener('click', () => {
-        handlePauseKey();
-    });
+    const mobilePauseBtn = document.getElementById('mobile-pause-btn');
+    const mobileExitBtn = document.getElementById('mobile-exit-btn');
+    
+    if (mobilePauseBtn) {
+        mobilePauseBtn.addEventListener('click', () => {
+            handlePauseKey();
+        });
+    }
 
-    document.getElementById('mobile-exit-btn').addEventListener('click', () => {
-        handleEscapeKey();
-    });
+    if (mobileExitBtn) {
+        mobileExitBtn.addEventListener('click', () => {
+            handleEscapeKey();
+        });
+    }
 
     const fullscreenBtn = document.getElementById('fullscreen-btn');
-    fullscreenBtn.onclick = () => {
-        if (!document.fullscreenElement) document.getElementById('game-container').requestFullscreen();
-        else document.exitFullscreen();
-    };
-
+    if (fullscreenBtn) {
+        fullscreenBtn.onclick = () => {
+            if (!document.fullscreenElement) document.getElementById('game-container').requestFullscreen();
+            else document.exitFullscreen();
+        };
+    }
 });
 
 function resizeCanvas() {
-    const ratio = canvas.width / canvas.height;
-    if (window.innerWidth / window.innerHeight > ratio) {
-        canvas.style.width = (window.innerHeight * ratio) + 'px'; canvas.style.height = window.innerHeight + 'px';
+    const container = document.getElementById('game-container');
+    const containerRect = container.getBoundingClientRect();
+    
+    // Base canvas dimensions
+    const baseWidth = 800;
+    const baseHeight = 600;
+    const aspectRatio = baseWidth / baseHeight;
+    
+    // Available space
+    const availableWidth = containerRect.width;
+    const availableHeight = containerRect.height;
+    
+    // Calculate optimal size
+    let canvasWidth, canvasHeight;
+    
+    if (availableWidth / availableHeight > aspectRatio) {
+        // Height is the limiting factor
+        canvasHeight = Math.min(availableHeight * 0.85, availableHeight - 100);
+        canvasWidth = canvasHeight * aspectRatio;
     } else {
-        canvas.style.width = window.innerWidth + 'px'; canvas.style.height = (window.innerWidth / ratio) + 'px';
+        // Width is the limiting factor
+        canvasWidth = Math.min(availableWidth * 0.95, availableWidth - 40);
+        canvasHeight = canvasWidth / aspectRatio;
     }
+    
+    // Apply mobile-specific adjustments
+    if (window.innerWidth <= 768) {
+        canvasWidth = Math.min(canvasWidth, availableWidth * 0.98);
+        canvasHeight = Math.min(canvasHeight, availableHeight * 0.75);
+        
+        // Maintain aspect ratio
+        if (canvasWidth / canvasHeight > aspectRatio) {
+            canvasWidth = canvasHeight * aspectRatio;
+        } else {
+            canvasHeight = canvasWidth / aspectRatio;
+        }
+    }
+    
+    // Landscape mobile adjustments
+    if (window.innerHeight <= 500 && window.innerWidth > window.innerHeight) {
+        canvasHeight = Math.min(canvasHeight, availableHeight * 0.9);
+        canvasWidth = canvasHeight * aspectRatio;
+    }
+    
+    // Apply the calculated size
+    canvas.style.width = Math.floor(canvasWidth) + 'px';
+    canvas.style.height = Math.floor(canvasHeight) + 'px';
+    
+    // Ensure canvas stays centered
+    canvas.style.margin = 'auto';
 }
+
 window.addEventListener('resize', resizeCanvas);
+window.addEventListener('orientationchange', () => {
+    // Delay resize to allow orientation change to complete
+    setTimeout(resizeCanvas, 100);
+});
 resizeCanvas();
 
 function startGame(gameMode = GameMode.SINGLE) {
