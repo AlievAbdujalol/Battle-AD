@@ -163,7 +163,10 @@ class MobileControlsManager {
     }
     
     setGameMode(gameMode) {
-        if (!this.isEnabled) return;
+        if (!this.isEnabled) {
+            this.log('Mobile controls disabled - skipping setGameMode');
+            return;
+        }
         
         this.log(`Setting up controls for mode: ${gameMode}`);
         this.cleanup();
@@ -172,12 +175,19 @@ class MobileControlsManager {
         
         if (gameMode === GameMode.SINGLE) {
             this.setupSinglePlayerControls();
-        } else {
+        } else if (gameMode === GameMode.COOPERATIVE || gameMode === GameMode.VERSUS) {
             this.setupMultiplayerControls();
+        } else {
+            this.log(`Unknown game mode: ${gameMode}`);
         }
         
         this.activeControls = gameMode;
         this.log(`Controls setup complete for ${gameMode}`);
+        
+        // Принудительно обновляем видимость после установки режима
+        setTimeout(() => {
+            this.updateVisibility(window.currentGameState, gameMode);
+        }, 100);
     }
     
     setupSinglePlayerControls() {
@@ -202,18 +212,29 @@ class MobileControlsManager {
         const mapping = this.multiplayerMapping;
         let setupCount = 0;
         
+        this.log('Setting up multiplayer controls...');
+        this.log('Mapping:', mapping);
+        
         Object.keys(mapping).forEach(buttonId => {
             const button = document.getElementById(buttonId);
             if (button) {
                 const keyCode = mapping[buttonId];
                 this.setupButtonEvents(button, keyCode, buttonId);
                 setupCount++;
+                this.log(`✓ Button ${buttonId} -> ${keyCode} setup successful`);
             } else {
-                this.log(`Button not found: ${buttonId}`);
+                this.log(`✗ Button not found: ${buttonId}`);
             }
         });
         
         this.log(`Multiplayer controls: ${setupCount} buttons setup`);
+        
+        // Проверяем, что window.keys существует
+        if (!window.keys) {
+            this.log('ERROR: window.keys object not found!');
+        } else {
+            this.log('✓ window.keys object found');
+        }
     }
     
     setupButtonEvents(button, keyCode, buttonId) {
@@ -428,6 +449,19 @@ class MobileControlsManager {
             window.keys[keyCode] = false;
             this.log(`Key ${keyCode} set to FALSE`);
         }, duration);
+    }
+    
+    // Метод для тестирования всех мультиплеерных кнопок
+    testMultiplayerControls() {
+        this.log('Testing all multiplayer controls...');
+        
+        const testKeys = ['KeyW', 'KeyS', 'KeyA', 'KeyD', 'Space', 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'Enter'];
+        
+        testKeys.forEach((key, index) => {
+            setTimeout(() => {
+                this.testKey(key, 500);
+            }, index * 600);
+        });
     }
     
     destroy() {

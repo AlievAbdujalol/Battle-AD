@@ -1072,6 +1072,57 @@ function testMobileControlsVisibility() {
 
 window.testMobileControlsVisibility = testMobileControlsVisibility;
 
+// Функция для принудительного тестирования мультиплеерных контролов
+function forceTestMultiplayerControls() {
+    console.log('[Game] Force testing multiplayer controls...');
+    
+    if (!window.mobileControlsManager) {
+        console.error('[Game] mobileControlsManager not found!');
+        return;
+    }
+    
+    // Принудительно настраиваем мультиплеерные контролы
+    window.mobileControlsManager.setGameMode('COOPERATIVE');
+    
+    // Тестируем каждую кнопку мультиплеера
+    const multiplayerButtons = [
+        { id: 'btn-p1-up', key: 'KeyW' },
+        { id: 'btn-p1-down', key: 'KeyS' },
+        { id: 'btn-p1-left', key: 'KeyA' },
+        { id: 'btn-p1-right', key: 'KeyD' },
+        { id: 'btn-p1-shoot', key: 'Space' },
+        { id: 'btn-p2-up', key: 'ArrowUp' },
+        { id: 'btn-p2-down', key: 'ArrowDown' },
+        { id: 'btn-p2-left', key: 'ArrowLeft' },
+        { id: 'btn-p2-right', key: 'ArrowRight' },
+        { id: 'btn-p2-shoot', key: 'Enter' }
+    ];
+    
+    multiplayerButtons.forEach((btn, index) => {
+        setTimeout(() => {
+            const button = document.getElementById(btn.id);
+            
+            if (button) {
+                console.log(`[Game] Testing button ${btn.id} -> ${btn.key}`);
+                
+                // Симулируем нажатие
+                keys[btn.key] = true;
+                button.classList.add('active');
+                
+                setTimeout(() => {
+                    keys[btn.key] = false;
+                    button.classList.remove('active');
+                    console.log(`[Game] Button ${btn.id} test complete`);
+                }, 300);
+            } else {
+                console.error(`[Game] Button ${btn.id} not found!`);
+            }
+        }, index * 400);
+    });
+}
+
+window.forceTestMultiplayerControls = forceTestMultiplayerControls;
+
 window.addEventListener('keydown', e => {
     keys[e.code] = true;
     
@@ -1218,6 +1269,11 @@ function returnToModeSelect() {
 function updateMobileControls() {
     if (window.mobileControlsManager) {
         window.mobileControlsManager.setGameState(currentGameState, currentGameMode);
+    }
+    
+    if (window.virtualJoystick) {
+        window.virtualJoystick.setGameState(currentGameState);
+        window.virtualJoystick.setGameMode(currentGameMode);
     }
 }
 
@@ -1386,10 +1442,30 @@ function startGame(gameMode = GameMode.SINGLE) {
     
     // Подключаем мобильные контролы для выбранного режима
     if (window.mobileControlsManager) {
-        window.mobileControlsManager.setGameMode(gameMode);
-        console.log('[Game] Mobile controls setup for mode:', gameMode);
+        // Настраиваем контролы с задержкой, чтобы убедиться что DOM готов
+        setTimeout(() => {
+            window.mobileControlsManager.setGameMode(gameMode);
+            console.log('[Game] Mobile controls setup for mode:', gameMode);
+            
+            // Дополнительная диагностика для мультиплеера
+            if (gameMode === GameMode.COOPERATIVE || gameMode === GameMode.VERSUS) {
+                setTimeout(() => {
+                    console.log('[Game] Testing multiplayer controls...');
+                    if (window.mobileControlsManager.testMultiplayerControls) {
+                        window.mobileControlsManager.testMultiplayerControls();
+                    }
+                }, 1000);
+            }
+        }, 200);
     } else {
         console.warn('[Game] mobileControlsManager not found!');
+    }
+    
+    // Подключаем виртуальный джойстик
+    if (window.virtualJoystick) {
+        window.virtualJoystick.setGameMode(gameMode);
+        window.virtualJoystick.setGameState(currentGameState);
+        console.log('[Game] Virtual joystick setup for mode:', gameMode);
     }
     
     // Диагностика мобильных контролов
