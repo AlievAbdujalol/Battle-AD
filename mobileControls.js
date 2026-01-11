@@ -195,6 +195,9 @@ class MobileControlsManager {
             // Устанавливаем клавишу как нажатую
             if (window.keys) {
                 window.keys[keyCode] = true;
+                this.log(`Key SET: ${keyCode} = true`);
+            } else {
+                this.log(`ERROR: window.keys not found!`);
             }
             
             // Визуальная обратная связь
@@ -210,6 +213,7 @@ class MobileControlsManager {
             // Отпускаем клавишу
             if (window.keys) {
                 window.keys[keyCode] = false;
+                this.log(`Key SET: ${keyCode} = false`);
             }
             
             // Убираем визуальную обратную связь
@@ -340,6 +344,30 @@ class MobileControlsManager {
             const button = document.getElementById(buttonId);
             this.log(`Multi button ${buttonId}: ${button ? 'Found' : 'Missing'}`);
         });
+        
+        // Проверяем объект keys
+        this.log(`window.keys object: ${window.keys ? 'Found' : 'Missing'}`);
+        if (window.keys) {
+            this.log('Current keys state:', window.keys);
+        }
+    }
+    
+    // Метод для тестирования конкретной клавиши
+    testKey(keyCode, duration = 1000) {
+        this.log(`Testing key: ${keyCode} for ${duration}ms`);
+        
+        if (!window.keys) {
+            this.log('ERROR: window.keys not found!');
+            return;
+        }
+        
+        window.keys[keyCode] = true;
+        this.log(`Key ${keyCode} set to TRUE`);
+        
+        setTimeout(() => {
+            window.keys[keyCode] = false;
+            this.log(`Key ${keyCode} set to FALSE`);
+        }, duration);
     }
     
     destroy() {

@@ -538,7 +538,7 @@ class Player extends Tank {
         let dx = 0, dy = 0, isMoving = false;
         let requestedAngle = this.angle;
 
-        // 1. Определение направления (приоритет последнего нажатия)
+        // 1. Определение направления - поддерживаем как клавиатуру, так и мобильные контролы
         if (keys['ArrowUp'] || keys['KeyW']) { 
             dy = -1; 
             requestedAngle = 0; 
@@ -1007,6 +1007,36 @@ function forceMobileControlsTest() {
 }
 
 window.forceMobileControlsTest = forceMobileControlsTest;
+
+// Функция для мониторинга клавиш в реальном времени
+function monitorKeys() {
+    console.log('[Game] Starting key monitoring...');
+    
+    const keyMonitor = setInterval(() => {
+        const activeKeys = [];
+        const testKeys = ['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'Space', 'KeyW', 'KeyA', 'KeyS', 'KeyD'];
+        
+        testKeys.forEach(key => {
+            if (keys[key]) {
+                activeKeys.push(key);
+            }
+        });
+        
+        if (activeKeys.length > 0) {
+            console.log('[Game] Active keys:', activeKeys);
+        }
+    }, 100);
+    
+    // Останавливаем мониторинг через 30 секунд
+    setTimeout(() => {
+        clearInterval(keyMonitor);
+        console.log('[Game] Key monitoring stopped');
+    }, 30000);
+    
+    return keyMonitor;
+}
+
+window.monitorKeys = monitorKeys;
 
 window.addEventListener('keydown', e => {
     keys[e.code] = true;
