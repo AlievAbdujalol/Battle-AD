@@ -1,17 +1,36 @@
-/* Enhanced Mobile Controls CSS */
-.mobile-controls-enhanced {
+/**
+ * Complete Mobile Controls CSS
+ * Production-ready, responsive, and clean implementation
+ * Supports Single Player and Local Multiplayer modes
+ */
+
+/* === CORE MOBILE CONTROLS CONTAINER === */
+#mobile-controls {
     position: absolute;
-    top: 0;
+    bottom: 20px;
     left: 0;
     width: 100%;
-    height: 100%;
+    display: none; /* Hidden by default */
+    justify-content: space-between;
+    padding: 0 30px;
+    box-sizing: border-box;
     pointer-events: none;
-    z-index: 25;
-    display: flex;
-    flex-direction: column;
+    z-index: 20;
 }
 
-/* Universal Game Controls */
+/* Show mobile controls only when explicitly enabled */
+#mobile-controls.show {
+    display: flex;
+}
+
+/* Hide on desktop with mouse/hover support */
+@media (hover: hover) and (pointer: fine) {
+    #mobile-controls { 
+        display: none !important; 
+    }
+}
+
+/* === UNIVERSAL GAME CONTROLS (Pause/Exit) === */
 .universal-game-controls {
     position: absolute;
     top: 20px;
@@ -38,26 +57,207 @@
     user-select: none;
     -webkit-user-select: none;
     -webkit-tap-highlight-color: transparent;
-    transition: all 0.2s ease;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
     cursor: pointer;
-    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
 }
 
 .universal-control-btn:active {
     background: rgba(255, 255, 255, 0.2);
     border-color: rgba(255, 255, 255, 0.8);
     transform: scale(0.95);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.4);
 }
 
-/* Hide enhanced controls on desktop */
-@media (hover: hover) and (pointer: fine) {
-    .mobile-controls-enhanced { 
-        display: none !important; 
-    }
+/* === CONTROL BUTTONS (D-Pad and Shoot) === */
+.control-btn {
+    pointer-events: auto;
+    background: rgba(255, 255, 255, 0.1);
+    border: 2px solid rgba(255, 255, 255, 0.2);
+    color: white;
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 24px;
+    font-weight: bold;
+    user-select: none;
+    -webkit-user-select: none;
+    touch-action: none;
+    -webkit-tap-highlight-color: transparent;
+    transition: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+    cursor: pointer;
+    position: relative;
+    overflow: hidden;
 }
 
-/* Responsive adjustments for universal controls */
+/* Ripple effect for button press */
+.control-btn::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 0;
+    height: 0;
+    background: rgba(255, 255, 255, 0.3);
+    border-radius: 50%;
+    transform: translate(-50%, -50%);
+    transition: width 0.3s ease, height 0.3s ease;
+}
+
+.control-btn:active::before,
+.control-btn.active::before {
+    width: 100%;
+    height: 100%;
+}
+
+.control-btn:active,
+.control-btn.active {
+    background: rgba(255, 255, 255, 0.25);
+    border-color: rgba(255, 255, 255, 0.6);
+    transform: scale(0.95);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.4), inset 0 2px 4px rgba(255, 255, 255, 0.2);
+}
+
+/* === D-PAD LAYOUT === */
+.d-pad {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 3px;
+}
+
+.d-pad-horizontal {
+    display: flex;
+    gap: 30px;
+}
+
+/* === SHOOT BUTTON === */
+#btn-shoot {
+    width: 70px;
+    height: 70px;
+    background: rgba(255, 0, 0, 0.3);
+    border-color: rgba(255, 0, 0, 0.5);
+    align-self: flex-end;
+    font-size: 28px;
+}
+
+#btn-shoot:active,
+#btn-shoot.active {
+    background: rgba(255, 0, 0, 0.6);
+    border-color: rgba(255, 0, 0, 0.8);
+}
+
+/* === MULTIPLAYER CONTROLS === */
+.mobile-control-set {
+    position: absolute;
+    bottom: 10px;
+    left: 0;
+    width: 100%;
+    display: flex;
+    justify-content: space-between;
+    padding: 0 15px;
+    box-sizing: border-box;
+    pointer-events: none;
+    z-index: 25;
+}
+
+.player-controls {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 5px;
+    pointer-events: auto;
+}
+
+.player1-controls {
+    align-self: flex-start;
+}
+
+.player2-controls {
+    align-self: flex-end;
+}
+
+.player-label {
+    background: rgba(255, 255, 255, 0.2);
+    color: white;
+    padding: 2px 6px;
+    border-radius: 8px;
+    font-size: 9px;
+    font-weight: bold;
+    margin-bottom: 2px;
+    text-align: center;
+    min-width: 20px;
+}
+
+.player1-controls .player-label {
+    background: rgba(76, 175, 80, 0.7); /* Green for Player 1 */
+}
+
+.player2-controls .player-label {
+    background: rgba(33, 150, 243, 0.7); /* Blue for Player 2 */
+}
+
+/* Small controls for multiplayer */
+.d-pad.small {
+    gap: 2px;
+}
+
+.d-pad.small .d-pad-horizontal {
+    gap: 15px;
+}
+
+.control-btn.small {
+    width: 35px;
+    height: 35px;
+    font-size: 14px;
+}
+
+.control-btn.small#btn-p1-shoot,
+.control-btn.small#btn-p2-shoot {
+    width: 45px;
+    height: 45px;
+    font-size: 18px;
+    background: rgba(255, 0, 0, 0.3);
+    border-color: rgba(255, 0, 0, 0.5);
+}
+
+.control-btn.small#btn-p1-shoot:active,
+.control-btn.small#btn-p1-shoot.active,
+.control-btn.small#btn-p2-shoot:active,
+.control-btn.small#btn-p2-shoot.active {
+    background: rgba(255, 0, 0, 0.6);
+    border-color: rgba(255, 0, 0, 0.8);
+}
+
+/* === RESPONSIVE DESIGN === */
+
+/* Tablet adjustments */
 @media (max-width: 768px) {
+    #mobile-controls {
+        bottom: 8px;
+        padding: 0 12px;
+    }
+    
+    .control-btn {
+        width: 45px;
+        height: 45px;
+        font-size: 18px;
+    }
+    
+    .d-pad-horizontal {
+        gap: 25px;
+    }
+    
+    #btn-shoot {
+        width: 60px;
+        height: 60px;
+        font-size: 24px;
+    }
+    
     .universal-game-controls {
         top: 15px;
         right: 15px;
@@ -69,9 +269,57 @@
         height: 45px;
         font-size: 18px;
     }
+    
+    .mobile-control-set {
+        bottom: 8px;
+        padding: 0 12px;
+    }
+    
+    .player-controls {
+        gap: 3px;
+    }
+    
+    .control-btn.small {
+        width: 32px;
+        height: 32px;
+        font-size: 12px;
+    }
+    
+    .control-btn.small#btn-p1-shoot,
+    .control-btn.small#btn-p2-shoot {
+        width: 42px;
+        height: 42px;
+        font-size: 16px;
+    }
+    
+    .d-pad.small .d-pad-horizontal {
+        gap: 12px;
+    }
 }
 
+/* Phone adjustments */
 @media (max-width: 480px) {
+    #mobile-controls {
+        bottom: 5px;
+        padding: 0 8px;
+    }
+    
+    .control-btn {
+        width: 40px;
+        height: 40px;
+        font-size: 16px;
+    }
+    
+    .d-pad-horizontal {
+        gap: 20px;
+    }
+    
+    #btn-shoot {
+        width: 55px;
+        height: 55px;
+        font-size: 22px;
+    }
+    
     .universal-game-controls {
         top: 10px;
         right: 10px;
@@ -83,10 +331,62 @@
         height: 40px;
         font-size: 16px;
     }
+    
+    .mobile-control-set {
+        bottom: 5px;
+        padding: 0 8px;
+    }
+    
+    .control-btn.small {
+        width: 28px;
+        height: 28px;
+        font-size: 11px;
+    }
+    
+    .control-btn.small#btn-p1-shoot,
+    .control-btn.small#btn-p2-shoot {
+        width: 38px;
+        height: 38px;
+        font-size: 14px;
+    }
+    
+    .d-pad.small .d-pad-horizontal {
+        gap: 10px;
+    }
+    
+    .player-label {
+        font-size: 8px;
+        padding: 1px 4px;
+    }
 }
 
 /* Landscape orientation adjustments */
 @media (orientation: landscape) and (max-height: 500px) {
+    #mobile-controls {
+        bottom: 3px;
+        padding: 0 5px;
+    }
+    
+    .control-btn {
+        width: 35px;
+        height: 35px;
+        font-size: 14px;
+    }
+    
+    .d-pad {
+        gap: 2px;
+    }
+    
+    .d-pad-horizontal {
+        gap: 18px;
+    }
+    
+    #btn-shoot {
+        width: 50px;
+        height: 50px;
+        font-size: 18px;
+    }
+    
     .universal-game-controls {
         top: 5px;
         right: 10px;
@@ -96,5 +396,77 @@
         width: 35px;
         height: 35px;
         font-size: 14px;
+    }
+    
+    .mobile-control-set {
+        bottom: 3px;
+        padding: 0 5px;
+    }
+    
+    .control-btn.small {
+        width: 25px;
+        height: 25px;
+        font-size: 10px;
+    }
+    
+    .control-btn.small#btn-p1-shoot,
+    .control-btn.small#btn-p2-shoot {
+        width: 35px;
+        height: 35px;
+        font-size: 12px;
+    }
+    
+    .d-pad.small {
+        gap: 1px;
+    }
+    
+    .d-pad.small .d-pad-horizontal {
+        gap: 8px;
+    }
+    
+    .player-label {
+        font-size: 7px;
+        padding: 1px 3px;
+    }
+    
+    .player-controls {
+        gap: 2px;
+    }
+}
+
+/* === ACCESSIBILITY AND PERFORMANCE === */
+
+/* Reduce motion for users who prefer it */
+@media (prefers-reduced-motion: reduce) {
+    .control-btn,
+    .universal-control-btn {
+        transition: none;
+    }
+    
+    .control-btn::before {
+        transition: none;
+    }
+}
+
+/* High contrast mode support */
+@media (prefers-contrast: high) {
+    .control-btn {
+        border-width: 3px;
+        border-color: rgba(255, 255, 255, 0.8);
+    }
+    
+    .universal-control-btn {
+        border-width: 3px;
+        border-color: rgba(255, 255, 255, 0.8);
+    }
+}
+
+/* Force hide on desktop browsers */
+@media (min-width: 769px) and (hover: hover) {
+    #mobile-controls,
+    .mobile-control-set,
+    .universal-game-controls {
+        display: none !important;
+        visibility: hidden !important;
     }
 }

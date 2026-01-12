@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Device Detection Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background: #1a1a1a;
+            color: white;
+        }
+        
+        .test-result {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 8px;
+            border-left: 4px solid #4CAF50;
+        }
+        
+        .desktop {
+            border-left-color: #f44336;
+        }
+        
+        .mobile {
+            border-left-color: #4CAF50;
+        }
+        
+        .info {
+            font-family: monospace;
+            font-size: 12px;
+            color: #ccc;
+        }
+        
+        .controls-test {
+            margin: 20px 0;
+            padding: 15px;
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 8px;
+        }
+    </style>
+</head>
+<body>
+    <h1>🔍 Device Detection Test</h1>
+    
+    <div id="detection-results"></div>
+    
+    <div class="controls-test">
+        <h3>Mobile Controls Test</h3>
+        <div id="mobile-controls-test">Loading...</div>
+    </div>
+    
+    <div class="controls-test">
+        <h3>Virtual Joystick Test</h3>
+        <div id="virtual-joystick-test">Loading...</div>
+    </div>
+
+    <script src="mobileControls.js"></script>
+    <script src="virtualJoystick.js"></script>
+    
+    <script>
+        function runDeviceDetection() {
+            const userAgent = navigator.userAgent.toLowerCase();
+            const mobileKeywords = [
+                'android', 'iphone', 'ipad', 'ipod', 'blackberry', 
+                'windows phone', 'mobile', 'webos', 'opera mini'
+            ];
+            
+            const isMobileUA = mobileKeywords.some(keyword => userAgent.includes(keyword));
+            const isSmallScreen = window.innerWidth <= 768;
+            const hasTouch = ('ontouchstart' in window) || (navigator.maxTouchPoints > 0);
+            const hasHover = window.matchMedia('(hover: hover)').matches;
+            const hasFinePointer = window.matchMedia('(pointer: fine)').matches;
+            const isDesktop = hasHover && hasFinePointer;
+            const isMobile = isMobileUA || (isSmallScreen && hasTouch && !isDesktop);
+            
+            const results = document.getElementById('detection-results');
+            results.innerHTML = `
+                <div class="test-result ${isMobile ? 'mobile' : 'desktop'}">
+                    <h3>Device Type: ${isMobile ? '📱 MOBILE' : '🖥️ DESKTOP'}</h3>
+                    <div class="info">
+                        User Agent: ${userAgent}<br>
+                        Screen Size: ${window.innerWidth}x${window.innerHeight}<br>
+                        Mobile UA Keywords: ${isMobileUA ? '✅' : '❌'}<br>
+                        Small Screen (≤768px): ${isSmallScreen ? '✅' : '❌'}<br>
+                        Touch Support: ${hasTouch ? '✅' : '❌'}<br>
+                        Hover Support: ${hasHover ? '✅' : '❌'}<br>
+                        Fine Pointer: ${hasFinePointer ? '✅' : '❌'}<br>
+                        Is Desktop: ${isDesktop ? '✅' : '❌'}<br>
+                        Max Touch Points: ${navigator.maxTouchPoints || 0}
+                    </div>
+                </div>
+            `;
+        }
+        
+        function testMobileControls() {
+            const testDiv = document.getElementById('mobile-controls-test');
+            
+            if (window.mobileControlsManager) {
+                const isEnabled = window.mobileControlsManager.isEnabled;
+                testDiv.innerHTML = `
+                    <strong>Mobile Controls Manager:</strong> ${isEnabled ? '✅ ENABLED' : '❌ DISABLED'}<br>
+                    <small>Should be enabled only on mobile devices</small>
+                `;
+            } else {
+                testDiv.innerHTML = `<strong>Mobile Controls Manager:</strong> ❌ NOT LOADED`;
+            }
+        }
+        
+        function testVirtualJoystick() {
+            const testDiv = document.getElementById('virtual-joystick-test');
+            
+            if (window.virtualJoystick) {
+                const isEnabled = window.virtualJoystick.isEnabled;
+                const overlay = document.getElementById('virtual-joystick-overlay');
+                
+                testDiv.innerHTML = `
+                    <strong>Virtual Joystick:</strong> ${isEnabled ? '✅ ENABLED' : '❌ DISABLED'}<br>
+                    <strong>Overlay Created:</strong> ${overlay ? '✅ YES' : '❌ NO'}<br>
+                    <small>Should be enabled only on mobile devices</small>
+                `;
+            } else {
+                testDiv.innerHTML = `<strong>Virtual Joystick:</strong> ❌ NOT LOADED`;
+            }
+        }
+        
+        // Run tests
+        document.addEventListener('DOMContentLoaded', function() {
+            runDeviceDetection();
+            
+            setTimeout(() => {
+                testMobileControls();
+                testVirtualJoystick();
+            }, 500);
+        });
+        
+        // Re-run on resize
+        window.addEventListener('resize', () => {
+            setTimeout(runDeviceDetection, 100);
+        });
+    </script>
+</body>
+</html>
